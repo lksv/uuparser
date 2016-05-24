@@ -1,22 +1,21 @@
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var parser = require('../..'),
-  Terminal = parser.Terminal,
-  Rule = parser.Rule,
-  Terminal = parser.Terminal,
-  NonTerminal = parser.NonTerminal,
-  RegExpTerminal = parser.RegExpTerminal;
+const parser = require('../..');
+const Terminal = parser.Terminal;
+const Rule = parser.Rule;
+const NonTerminal = parser.NonTerminal;
+const RegExpTerminal = parser.RegExpTerminal;
 
 describe('Rule', () => {
-  var lhs = new NonTerminal('A');
+  const lhs = new NonTerminal('A');
 
   it('should raise error when LHS in not NonTerminal', () => {
-    var subject = () => { new Rule(1, []); };
+    const subject = () => new Rule(1, []);
     expect(subject).to.throw(/LHS/);
   });
 
   it('should raise error when RHS contains non-GrmSymbol object', () => {
-    var subject = () => { new Rule(lhs, [1]); };
+    const subject = () => new Rule(lhs, [1]);
     expect(subject).to.throw(/RHS/);
   });
 
@@ -25,7 +24,7 @@ describe('Rule', () => {
   });
 
   it('should create non-empty rule', () => {
-    var term = new Terminal('abc');
+    const term = new Terminal('abc');
     expect(() => new Rule(lhs, [lhs, term])).to.not.throw(Error);
   });
 
@@ -45,10 +44,10 @@ describe('Rule', () => {
     });
 
     it('when semRes and options are defined', () => {
-      var term = new Terminal('abc');
-      var regExpTerm = new RegExpTerminal('def');
+      const term = new Terminal('abc');
+      const regExpTerm = new RegExpTerminal('def');
 
-      var subject =
+      const subject =
         new Rule(lhs, [lhs, term, regExpTerm], () => 123, { weight: 0.1 });
 
       expect(subject.toString()).to

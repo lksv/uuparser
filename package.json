@@ -4,9 +4,9 @@
   "description": "Universal Parser",
   "main": "index.js",
   "scripts": {
-    "test-unit": "mocha --require test/support/env --reporter spec --bail --check-leaks test/",
-    "lint": "jshint src test",
-    "style": "jscs src test",
+    "test-unit": "mocha --require test/support/env --reporter spec --bail --check-leaks test/grammar/",
+    "lint": "jshint lib test",
+    "style": "jscs lib test",
     "test": "npm run lint && npm run style && npm run test-unit"
   },
   "engines": {
@@ -20,6 +20,8 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "eslint": "^2.10.2",
+    "eslint-config-airbnb": "^9.0.1",
+    "eslint-plugin-react": "^5.1.1",
     "jscs": "^3.0.3",
     "jscs-jsdoc": "^2.0.0",
     "jsdoc": "^3.4.0",

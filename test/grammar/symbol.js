@@ -1,10 +1,10 @@
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var parser = require('../..'),
-  GrmSymbol = parser.GrmSymbol,
-  NonTerminal = parser.NonTerminal,
-  Terminal = parser.Terminal,
-  RegExpTerminal = parser.RegExpTerminal;
+const parser = require('../..');
+const GrmSymbol = parser.GrmSymbol;
+const NonTerminal = parser.NonTerminal;
+const Terminal = parser.Terminal;
+const RegExpTerminal = parser.RegExpTerminal;
 
 describe('GrmSymbol', () => {
   it('should take one param', () => {
@@ -12,7 +12,7 @@ describe('GrmSymbol', () => {
   });
 
   it('should have property .name', () => {
-    var subject = new GrmSymbol('customName');
+    const subject = new GrmSymbol('customName');
     expect(subject.name).to.equal('customName');
   });
 });
@@ -20,14 +20,14 @@ describe('GrmSymbol', () => {
 describe('NonTerminal', () => {
   describe('#toString', () => {
     it('should return .name property', () => {
-      var subject = new NonTerminal('NONTERMINAL');
+      const subject = new NonTerminal('NONTERMINAL');
       expect(subject.toString()).to.equal('NONTERMINAL');
     });
   });
 });
 
 describe('Terminal', () => {
-  var subject = new Terminal('terminal');
+  const subject = new Terminal('terminal');
   describe('#toString', () => {
     it('should return .name property surounded in ""', () => {
       expect(subject.toString()).to.equal('"terminal"');
@@ -48,7 +48,7 @@ describe('RegExpTerminal', () => {
     expect(new RegExpTerminal(/abc/).regExp).to.be.instanceof(RegExp);
   });
 
-  var subject = new RegExpTerminal('\\d+');
+  const subject = new RegExpTerminal('\\d+');
 
   describe('#toString', () => {
     it('should return .name property surounded in //', () => {
