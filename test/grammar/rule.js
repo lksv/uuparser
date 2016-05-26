@@ -51,7 +51,7 @@ describe('Rule', () => {
         new Rule(lhs, [lhs, term, regExpTerm], () => 123, { weight: 0.1 });
 
       expect(subject.toString()).to
-        .equal('A -> A "abc" /def/ {{ () => 123 }} {"weight":0.1}');
+        .equal('A -> A "abc" /def/y {{ () => 123 }} {"weight":0.1}');
     });
   });
 });

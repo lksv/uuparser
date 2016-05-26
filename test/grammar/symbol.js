@@ -35,7 +35,7 @@ describe('Terminal', () => {
   });
   describe('#match', () => {
     it('should match exact match with input', () => {
-      expect(subject.match('terminal here')).to.equal('terminal');
+      expect(subject.match('xxx terminal here', 4)).to.eql([['terminal'], 12]);
     });
   });
 });
@@ -52,13 +52,13 @@ describe('RegExpTerminal', () => {
 
   describe('#toString', () => {
     it('should return .name property surounded in //', () => {
-      expect(subject.toString()).to.equal('/\\d+/');
+      expect(subject.toString()).to.equal('/\\d+/y');
     });
   });
 
   describe('#match', () => {
     it('should match exact match with input', () => {
-      expect(subject.match('123 here')).to.equal('123');
+      expect(subject.match('xxx 123 here', 4)).to.eql([['123'], 7]);
     });
   });
 });

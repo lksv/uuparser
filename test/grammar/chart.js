@@ -24,7 +24,7 @@ describe('ChartItemHistory', () => {
     });
     const chartItem2 = new ChartItem(chartItem1, { dot: 2, eidx: 2 });
 
-    it('should return same code for same open & close chartItems', () => {
+    it('should return same code for same open & closed chartItems', () => {
       const subject = new ChartItemHistory(chartItem1, chartItem2);
       const same = new ChartItemHistory(
         new ChartItem(chartItem1),
@@ -33,7 +33,7 @@ describe('ChartItemHistory', () => {
       expect(subject.code).to.equal(same.code);
     });
 
-    it('should return different code when open or close ChartItem differs', () => {
+    it('should return different code when open or closed ChartItem differs', () => {
       const subject = new ChartItemHistory(chartItem1, chartItem2);
       const other = new ChartItemHistory(
         new ChartItem(chartItem1, { dot: 1 }),
@@ -65,23 +65,27 @@ describe('ChartItem', () => {
   });
 
   it('should create ChartItem by clonning form another one', () => {
-    subject = new ChartItem({ sidx: 1, eidx: 2, dot: 3, rule });
+    subject = new ChartItem({ sidx: 1, eidx: 2, dot: 3, rule, open: 'stub-o', closed: 'stub-c' });
     expect(subject.sidx).to.equal(1);
     expect(subject.eidx).to.equal(2);
     expect(subject.dot).to.equal(3);
     expect(subject.rule).to.equal(rule);
+    expect(subject.history[0].open).to.equal('stub-o');
+    expect(subject.history[0].closed).to.equal('stub-c');
   });
 
   it('should create ChartItem by prefer clonning forom second param when defined', () => {
     const secondRule = new Rule(new NonTerminal('X'), rhs);
     subject = new ChartItem(
-      { sidx: 1, eidx: 2, dot: 3, rule },
-      { sidx: 4, eidx: 5, dot: 6, rule: secondRule }
+      { sidx: 1, eidx: 2, dot: 3, rule, open: 'stub-o1', closed: 'stub-c1' },
+      { sidx: 4, eidx: 5, dot: 6, rule: secondRule, open: 'stub-o2', closed: 'stub-c2' }
     );
     expect(subject.sidx).to.equal(4);
     expect(subject.eidx).to.equal(5);
     expect(subject.dot).to.equal(6);
     expect(subject.rule).to.equal(secondRule);
+    expect(subject.history[0].open).to.equal('stub-o2');
+    expect(subject.history[0].closed).to.equal('stub-c2');
   });
 
   it('should not clone history', () => {
@@ -308,6 +312,41 @@ describe('Chart', () => {
       const chartItem = new ChartItem({ rule });
       subject.add(chartItem);
       expect(subject.find(new ChartItem({ rule }))).to.equal(chartItem);
+    });
+  });
+
+  describe('#addFromOpenClosed', () => {
+    it('add new edge to the chart hypothesis', () => {
+      const ruleE2TermYes = new Rule(new NonTerminal('E'), [new Terminal('yes')]);
+      const ruleS2termE = new Rule(
+        new NonTerminal('A'),
+        [new Terminal('term'), new NonTerminal('E')]
+      );
+      const reducedChartItem = new ChartItem({
+        rule: ruleE2TermYes,
+        sidx: 5,
+        eidx: 8,
+      });
+      const open = new ChartItem({ rule: ruleS2termE, sidx: 5, eidx: 5, dot: 0 });
+      subject.add(open);
+      subject.addFromOpenClosed(open, reducedChartItem);
+      const newEdge = subject.hypothesis[1];
+      expect(newEdge.sidx).to.equal(5);
+      expect(newEdge.eidx).to.equal(8);
+      expect(newEdge.rule).to.eql(ruleS2termE);
+      expect(newEdge.history[0].open).to.eql(open);
+      expect(newEdge.history[0].closed).to.eql(reducedChartItem);
+    });
+  });
+
+  describe('#addPredicted', () => {
+    it('add predicted edge to the agenda', () => {
+      subject.addPredicted(rule, 123);
+      const newEdge = subject.hypothesis[0];
+      expect(newEdge.sidx).to.equal(123);
+      expect(newEdge.eidx).to.equal(123);
+      expect(newEdge.rule).to.eql(rule);
+      expect(newEdge.history).to.eql([]);
     });
   });
 
