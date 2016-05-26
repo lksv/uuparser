@@ -4,9 +4,9 @@
   "description": "Universal Parser",
   "main": "index.js",
   "scripts": {
-    "test-unit": "mocha --require test/support/env --reporter spec --bail --check-leaks test/grammar/",
-    "lint": "jshint lib test",
-    "style": "jscs lib test",
+    "test-unit": "mocha --require test/support/env --reporter spec --bail --check-leaks test/grammar/ test/parser",
+    "lint": "jshint src test",
+    "style": "jscs src test",
     "test": "npm run lint && npm run style && npm run test-unit"
   },
   "engines": {

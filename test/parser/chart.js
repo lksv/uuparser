@@ -350,6 +350,20 @@ describe('Chart', () => {
     });
   });
 
+  describe('#addScanned', () => {
+    it('add new edge to agenda', () => {
+      const ruleTerm = new Rule(lhs, [new Terminal('abc')]);
+      const edge = new ChartItem({ rule: ruleTerm, sidx: 12, eidx: 15, dot: 0 });
+      subject.addScanned(edge, 123, 'semRes');
+      const newEdge = subject.hypothesis[0];
+      expect(newEdge.sidx).to.equal(12);
+      expect(newEdge.eidx).to.equal(123);
+      expect(newEdge.rule).to.eql(ruleTerm);
+      expect(newEdge.history[0].open).to.eql(edge);
+      expect(newEdge.history[0].semRes).to.eql('semRes');
+    });
+  });
+
   describe('#next', () => {
     it('return next item form agenda', () => {
       const chartItem = new ChartItem({ rule });

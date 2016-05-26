@@ -1,17 +1,18 @@
-const charts = require('./chart');
-const Chart = charts.Chart;
-const ChartItem = charts.ChartItem;
+const Chart = require('./chart').Chart;
+const DefaultLogger = require('../utils/logger');
 
 class Parser {
-  constructor(grammar, type, lexer) {
+  constructor(grammar, type, opts = {}) {
     if (['bottomUp', 'topDown'].indexOf(type) === -1) {
       throw new Error('Unknown parser type!');
     }
+    this.logger = opts.logger || new DefaultLogger;
 
     this.grammar = grammar;
     this.type = type;
-    this.lexer = lexer || Parser.defaultLexer;
-    this.chart = new Chart();
+    this.lexer = opts.lexer || Parser.defaultLexer;
+    this.chart = new Chart(this.logger);
+
   }
 
   /**
@@ -72,15 +73,10 @@ class Parser {
 
   scanner(chartItem) {
     const symbol = chartItem.nextSymbol();
-    const [res, eidx] = symbol.match(this.input, chartItem.eidx);
+    // const [res, eidx] = symbol.match(this.input, chartItem.eidx);
+    const [res, eidx] = this.lexer(symbol, this.input, chartItem.eidx);
     if (res) {
-      const newChartItem = new ChartItem(chartItem, {
-        dot: chartItem.dot + 1,
-        eidx,
-        open: chartItem,
-        semRes: res,
-      });
-      this.chart.add(newChartItem);
+      this.chart.addScanned(chartItem, eidx, res);
     }
   }
 
@@ -115,7 +111,7 @@ class Parser {
       return [undefined, undefined];
     }
     // static constant, how to set it that in JS?
-    const r = RegExp.new('\\s+', 'ym');
+    const r = new RegExp('\\s+', 'ym');
     r.lastIndex = eidx;
     if (r.exec(inputString)) {
       return [res, r.lastIndex];

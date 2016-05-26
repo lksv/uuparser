@@ -13,8 +13,8 @@
  * * close:    B -> any . # any reduced item
  *
  */
-const symbols = require('./symbol');
-const NonTerminal = symbols.NonTerminal;
+const NonTerminal = require('../grammar').NonTerminal;
+const DefaultLogger = require('../utils/logger');
 
 /**
  * Structure to store information about how to chartItem (edge) was created form
@@ -99,6 +99,44 @@ class ChartItem {
     return this.dot === 0;
   }
 
+  /** Returns AST (semantic representation)
+   * If edge is:
+   *  * predicted than semantic representation is [].
+   *  * not reduced it returns array of semantic representation of all symbols before a dot.
+   *  * reduced than it returns all posible semantic representation as an Array of Objects.
+   *
+   * @returns [Array] array of Objects (AST Nodes)
+   */
+  semRes() {
+    // if already cached return it now
+    if (this.semRes) return this.semRes;
+
+    // predicted adges has empty semRes - we are in fixed point of the recursion.
+    if (this.isPredictedItem()) return [];
+
+    //calculate semRes for all RHS's symbols (before the dot)
+    let semRes = [];
+    this.history.forEach(h => {
+      const openSemRes = h.open.semRes();
+      // history has semRes for shift items, i.e. semRes of Terminal is
+      // taken directly
+      const closedSemRes = h.semRes ? h.semRes : h.closed.semRes();
+      for (let osr of openSemRes) {
+        for (let csr of closedSemRes) {
+          semRes.push([osr, csr]);
+        }
+      }
+    });
+    if (this.isReducedItem()) {
+      semRes = semRes.map(s => this.rule.semRes(s));
+    }
+    // Cache the result. Result can be requested form different parent places
+    // therefore caching is needed.
+    this.semRes = semRes;
+
+    return this.semRes;
+  }
+
   /**
    * Copy history form other chartItem to this
    * Throws exception if this and other differs
@@ -116,6 +154,26 @@ class ChartItem {
       if (!this.history.find(h => (h.code === otherHistoryHashCode))) {
         this.history.push(otherHistory);
       }
+    });
+  }
+
+  /**
+   * Goes recursively by history edges (i.e open and close edges) and mark 
+   * each child edge as marked.
+   *
+   * It is used "internally" to find supremum of reducedRules edges which are
+   * upperbound by the <sidx, eidx>.
+   * It is genneraly used only once after the `parse` is done. Therefore there
+   * is not method to cleare the marked edges.
+   *
+   * It does not mark first *nested* direct children.
+   * @param {Number} nested From which generation (recursively) mark the childer
+   */
+  deepMark(nested) {
+    if (nested <= 0) this.marked = true;
+    this.history.forEach(h => {
+      if (h.open) h.open.deepMark(nested - 1);
+      if (h.closed) h.closed.deepMark(nested - 1);
     });
   }
 
@@ -189,7 +247,7 @@ class ChartItemIndex {
 }
 
 class Chart {
-  constructor() {
+  constructor(logger) {
     // array of ChartItems
     // it holds Chart and Agenda
     // in the *hypothesis* array all chartItems before *hypothesisIdx* index
@@ -211,6 +269,8 @@ class Chart {
     // list of all exists ChartItems hashCodes
     // Used to not add already exist chartItem
     this.existChartItems = new Set();
+
+    this.logger = logger || new DefaultLogger;
   }
 
   /**
@@ -249,25 +309,46 @@ class Chart {
    * @param {ChartItem} closed - closed edge
    */
   addFromOpenClosed(open, closed) {
-    const newChartItem = new ChartItem(open, {
+    const newEdge = new ChartItem(open, {
       eidx: closed.eidx,
       dot: open.dot + 1,
       open,
       closed,
     });
-    this.add(newChartItem);
+    this.logger.debug(`  addFromOpenClosed: ${newEdge}`);
+    this.add(newEdge);
   }
 
-  /*
+  /**
    * Add new (predicted) edge to the agenda
    */
   addPredicted(rule, idx) {
-    this.add(new ChartItem({
+    const newEdge = new ChartItem({
       sidx: idx,
       eidx: idx,
       dot:  0,
       rule,
-    }));
+    });
+    this.logger.debug(`  addPredicted: ${newEdge}`);
+    this.add(newEdge);
+  }
+
+  /**
+   * Add new edge which consumes (jumps) over Terminal
+   *
+   * @param {ChartItem} chartItem Edge to process
+   * @param {Number} eidx Index in input we are consumed to
+   * @param {Object} semRes result of *match* symbol.method (usually the string we consumed from input)
+   */
+  addScanned(chartItem, eidx, semRes) {
+    const newEdge = new ChartItem(chartItem, {
+      dot: chartItem.dot + 1,
+      eidx,
+      open: chartItem,
+      semRes,
+    });
+    this.logger.debug(`  addScanner: ${newEdge}`);
+    this.add(newEdge);
   }
 
   getReduced(symbol, idx) {
@@ -288,7 +369,21 @@ class Chart {
   }
 
   next() {
-    return this.hypothesis[this.hypothesisIdx++];
+    const currentEdge = this.hypothesis[this.hypothesisIdx++];
+    this.logger.debug(`processing edge[${this.hypothesisIdx}]: ${currentEdge}`);
+    return currentEdge;
+  }
+
+  /**
+   * returns reduced edges from chart (and agenda) which parse *entity* rule
+   * and only that which are not children (not in the history) of
+   * another parentEntities
+   */
+  parentEntities() {
+    const allEntities = this.hypothesis.filter(edge => edge.rule.entity && edge.isReducedItem());
+    allEntities.forEach(edge => edge.deepMark(1));
+    const parentEntities = allEntities.filter(edge => !edge.marked);
+    this.logger.debug(`parentEntities: ${parentEntities}`);
   }
 }
 

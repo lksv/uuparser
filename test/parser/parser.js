@@ -184,5 +184,16 @@ describe('Parser', () => {
       expect(newEdge.history[0].open).to.eql(openRegExpTerm);
       expect(newEdge.history[0].closed).to.eql(undefined);
     });
+
+    it('should employ lexer and skip spaces', () => {
+      const openTerm = new ChartItem({ rule: ruleE2term, sidx: 5, eidx: 5, dot: 0 });
+      const subject = new Parser(grammar, 'bottomUp');
+      subject.input = '12345term   XYZ';
+      subject.scanner(openTerm);
+      const newEdge = subject.chart.hypothesis[0];
+      expect(newEdge.dot).to.equal(1);
+      expect(newEdge.eidx).to.equal(9 + 3);
+      expect(newEdge.history[0].semRes).to.eql(['term']);
+    });
   });
 });

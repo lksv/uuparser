@@ -15,7 +15,7 @@ class Rule {
    *   * priority=INTEGER
    *   * weight=FLOAT
    *   * op_precedence=INTEGER
-   *   * assoc=String [left|right|noassoc
+   *   * assoc=String [left|right|noassoc]
    * @constructor
    * @param {NonTerminal} lhs Left Hand Side of the rule
    * @param {Array} rhs Right Hand Side of the rule (arry of symbols)
@@ -35,6 +35,7 @@ class Rule {
     this.lhs = lhs;
     this.rhs = rhs;
     this.semRes = semRes;
+    this.entity = options.entity;
     this.options = options;
 
     this.hashCode = this.toString();
