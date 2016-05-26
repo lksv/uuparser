@@ -166,7 +166,7 @@ describe('Parser', () => {
       expect(newEdge.dot).to.equal(1);
       expect(newEdge.sidx).to.equal(5);
       expect(newEdge.eidx).to.equal(9);
-      expect(newEdge.history[0].semRes).to.eql(['term']);
+      expect(newEdge.history[0].termMatch).to.eql(['term']);
       expect(newEdge.history[0].open).to.eql(openTerm);
       expect(newEdge.history[0].closed).to.eql(undefined);
     });
@@ -180,7 +180,7 @@ describe('Parser', () => {
       expect(newEdge.dot).to.equal(1);
       expect(newEdge.sidx).to.equal(2);
       expect(newEdge.eidx).to.equal(6);
-      expect(newEdge.history[0].semRes).to.eql(['word']);
+      expect(newEdge.history[0].termMatch).to.eql(['word']);
       expect(newEdge.history[0].open).to.eql(openRegExpTerm);
       expect(newEdge.history[0].closed).to.eql(undefined);
     });
@@ -193,7 +193,7 @@ describe('Parser', () => {
       const newEdge = subject.chart.hypothesis[0];
       expect(newEdge.dot).to.equal(1);
       expect(newEdge.eidx).to.equal(9 + 3);
-      expect(newEdge.history[0].semRes).to.eql(['term']);
+      expect(newEdge.history[0].termMatch).to.eql(['term']);
     });
   });
 });

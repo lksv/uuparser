@@ -214,6 +214,7 @@ describe('ChartItemIndex', () => {
       subject.add(lhs, 0, chartItem1);
       subject.add(lhs, 0, chartItem1);
       subject.add(lhs, 0, new ChartItem(chartItem1));
+      console.log(Array.from(subject.get(lhs, 0)));
       expect(Array.from(subject.get(lhs, 0))).to.eql([chartItem1]);
     });
 
@@ -354,13 +355,13 @@ describe('Chart', () => {
     it('add new edge to agenda', () => {
       const ruleTerm = new Rule(lhs, [new Terminal('abc')]);
       const edge = new ChartItem({ rule: ruleTerm, sidx: 12, eidx: 15, dot: 0 });
-      subject.addScanned(edge, 123, 'semRes');
+      subject.addScanned(edge, 123, 'matched string');
       const newEdge = subject.hypothesis[0];
       expect(newEdge.sidx).to.equal(12);
       expect(newEdge.eidx).to.equal(123);
       expect(newEdge.rule).to.eql(ruleTerm);
       expect(newEdge.history[0].open).to.eql(edge);
-      expect(newEdge.history[0].semRes).to.eql('semRes');
+      expect(newEdge.history[0].termMatch).to.eql('matched string');
     });
   });
 

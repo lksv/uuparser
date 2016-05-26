@@ -21,13 +21,13 @@ const DefaultLogger = require('../utils/logger');
  * consists of:
  * * open  - how was the symbols in RSH created form
  * * closed - how was the NonTerminal on the dot created
- * * semRes - the parsered string of the terminals
+ * * termMatch - the parsered string of the terminals
  */
 class ChartItemHistory {
-  constructor(open, closed, semRes) {
+  constructor(open, closed, termMatch) {
     this.open = open;
     this.closed = closed;
-    this.semRes = semRes || [];
+    this.termMatch = termMatch || [];
 
     this.code = (this.open ? this.open.code : 'null') +
       ':' +
@@ -58,9 +58,9 @@ class ChartItem {
 
     const open = cloneFrom2.open || cloneFrom.open;
     const closed = cloneFrom2.closed || cloneFrom.closed;
-    if (open || closed || cloneFrom.semRes || cloneFrom2.semRes) {
-      const semRes = cloneFrom2.semRes || cloneFrom.semRes;
-      this.history.push(new ChartItemHistory(open, closed, semRes));
+    if (open || closed || cloneFrom.termMatch || cloneFrom2.termMatch) {
+      const termMatch = cloneFrom2.termMatch || cloneFrom.termMatch;
+      this.history.push(new ChartItemHistory(open, closed, termMatch));
     }
 
     // rule, dot, sidx, edix BUT NOT history
@@ -112,7 +112,7 @@ class ChartItem {
     if (this.semRes) return this.semRes;
 
     // predicted adges has empty semRes - we are in fixed point of the recursion.
-    if (this.isPredictedItem()) return [];
+    if (this.isPredictedItem()) return [null];
 
     //calculate semRes for all RHS's symbols (before the dot)
     let semRes = [];
@@ -120,7 +120,8 @@ class ChartItem {
       const openSemRes = h.open.semRes();
       // history has semRes for shift items, i.e. semRes of Terminal is
       // taken directly
-      const closedSemRes = h.semRes ? h.semRes : h.closed.semRes();
+      const closedSemRes = h.termMatch ? h.termMatch : h.closed.semRes();
+      // TODO: if osr is empty, use only closedSemRes
       for (let osr of openSemRes) {
         for (let csr of closedSemRes) {
           semRes.push([osr, csr]);
@@ -128,7 +129,7 @@ class ChartItem {
       }
     });
     if (this.isReducedItem()) {
-      semRes = semRes.map(s => this.rule.semRes(s));
+      semRes = semRes.map(s => this.rule.semRescall(undefined, s));
     }
     // Cache the result. Result can be requested form different parent places
     // therefore caching is needed.
@@ -340,12 +341,12 @@ class Chart {
    * @param {Number} eidx Index in input we are consumed to
    * @param {Object} semRes result of *match* symbol.method (usually the string we consumed from input)
    */
-  addScanned(chartItem, eidx, semRes) {
+  addScanned(chartItem, eidx, termMatch) {
     const newEdge = new ChartItem(chartItem, {
       dot: chartItem.dot + 1,
       eidx,
       open: chartItem,
-      semRes,
+      termMatch,
     });
     this.logger.debug(`  addScanner: ${newEdge}`);
     this.add(newEdge);
