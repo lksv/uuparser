@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Stores history of ChartItem
  *
@@ -27,7 +29,7 @@ class ChartItemHistory {
   constructor(open, closed, termMatch) {
     this.open = open;
     this.closed = closed;
-    this.termMatch = termMatch || [];
+    this.termMatch = termMatch;
 
     // eslint-disable-next-line
     this.code = (this.open ? this.open.code : 'null') +
@@ -111,35 +113,53 @@ class ChartItem {
    *
    * @returns {Array} array of Objects (AST Nodes)
    */
-  semRes() {
+  semRes(nested = 0) {
     // if already cached return it now
-    if (this.semRes) return this.semRes;
+    if (this._semRes) return this._semRes;
 
+    console.log(`${' '.repeat(nested * 2)}entering semRes ${this.toString()}`);
+
+    // empty rule - just call and return semRes callback with no arguments
+    if (this.isPredictedItem() && this.isReducedItem()) {
+      return this.rule.semRes.apply(undefined);
+    }
     // predicted adges has empty semRes - we are in fixed point of the recursion.
-    if (this.isPredictedItem()) return [null];
+    if (this.isPredictedItem()) return [];
 
     // calculate semRes for all RHS's symbols (before the dot)
-    let semRes = [];
+    let rhsNodes = [];
     this.history.forEach(h => {
-      const openSemRes = h.open.semRes();
+      const openSemRes = h.open.semRes(nested + 1);
+      console.log('openSemRes:', openSemRes);
       // history has semRes for shift items, i.e. semRes of Terminal is
       // taken directly
-      const closedSemRes = h.termMatch ? h.termMatch : h.closed.semRes();
-      // TODO: if osr is empty, use only closedSemRes
-      for (const osr of openSemRes) {
+      const closedSemRes = h.termMatch ? h.termMatch : h.closed.semRes(nested + 1);
+      console.log('closedSemRes:', closedSemRes);
+      if (!openSemRes || openSemRes.length === 0) {
         for (const csr of closedSemRes) {
-          semRes.push([osr, csr]);
+          rhsNodes.push([csr]);
+        }
+      } else {
+        for (const osr of openSemRes) {
+          for (const csr of closedSemRes) {
+            rhsNodes.push(osr.concat(csr));
+          }
         }
       }
     });
+    console.log('permutated semRes:', rhsNodes);
     if (this.isReducedItem()) {
-      semRes = semRes.map(s => this.rule.semRescall(undefined, s));
+      console.log(`${' '.repeat(nested * 2)}calling callback for ${this.toString()}`);
+      rhsNodes = rhsNodes.map(s => this.rule.semRes.apply(undefined, s));
+      console.log('result:', rhsNodes);
     }
     // Cache the result. Result can be requested form different parent places
     // therefore caching is needed.
-    this.semRes = semRes;
+    this._semRes = rhsNodes;
 
-    return this.semRes;
+    console.log(`${' '.repeat(nested * 2)}leaving semRes ${this.toString()} with result:${rhsNodes}`);
+
+    return rhsNodes;
   }
 
   /**
@@ -175,11 +195,11 @@ class ChartItem {
    * @param {Number} nested From which generation (recursively) mark the childer
    * @returns {undefined}
    */
-  deepMark(nested) {
-    if (nested <= 0) this.marked = true;
+  _deepMark(nested) {
+    if (nested <= 0) this._marked = true;
     this.history.forEach(h => {
-      if (h.open) h.open.deepMark(nested - 1);
-      if (h.closed) h.closed.deepMark(nested - 1);
+      if (h.open) h.open._deepMark(nested - 1);
+      if (h.closed) h.closed._deepMark(nested - 1);
     });
   }
 
@@ -288,7 +308,7 @@ class Chart {
    * @param {ChartItem} chartItem Edge to store
    * @returns {undefined}
    */
-  add(chartItem) {
+  _add(chartItem) {
     const alreadyExists = this.find(chartItem);
     if (alreadyExists) {
       // do not add chartItem if already exists in Chart
@@ -328,7 +348,7 @@ class Chart {
       closed,
     });
     this.logger.debug(`  addFromOpenClosed: ${newEdge}`);
-    this.add(newEdge);
+    this._add(newEdge);
   }
 
   /**
@@ -345,7 +365,7 @@ class Chart {
       rule,
     });
     this.logger.debug(`  addPredicted: ${newEdge}`);
-    this.add(newEdge);
+    this._add(newEdge);
   }
 
   /**
@@ -365,7 +385,7 @@ class Chart {
       termMatch,
     });
     this.logger.debug(`  addScanner: ${newEdge}`);
-    this.add(newEdge);
+    this._add(newEdge);
   }
 
   getReduced(symbol, idx) {
@@ -400,9 +420,10 @@ class Chart {
    */
   parentEntities() {
     const allEntities = this.hypothesis.filter(edge => edge.rule.entity && edge.isReducedItem());
-    allEntities.forEach(edge => edge.deepMark(1));
-    const parentEntities = allEntities.filter(edge => !edge.marked);
+    allEntities.forEach(edge => edge._deepMark(1));
+    const parentEntities = allEntities.filter(edge => !edge._marked);
     this.logger.debug(`parentEntities: ${parentEntities}`);
+    return parentEntities;
   }
 }
 

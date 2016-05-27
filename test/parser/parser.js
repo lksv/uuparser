@@ -68,8 +68,8 @@ describe('Parser', () => {
       // add two waiting edges
       const open1 = new ChartItem({ rule: ruleA2E, sidx: 5, eidx: 5, dot: 0 });
       const open2 = new ChartItem({ rule: ruleS2termE, sidx: 0, eidx: 5, dot: 1 });
-      subject.chart.add(open1);
-      subject.chart.add(open2);
+      subject.chart._add(open1);
+      subject.chart._add(open2);
 
       sinon.spy(subject.chart, 'addFromOpenClosed');
       subject.completer(closed);
@@ -122,8 +122,8 @@ describe('Parser', () => {
     });
 
     it('should call addFromOpenClosed for every reduced edges', () => {
-      subject.chart.add(closed1);
-      subject.chart.add(closed2);
+      subject.chart._add(closed1);
+      subject.chart._add(closed2);
       sinon.spy(subject.chart, 'addFromOpenClosed');
       subject.predictor(open);
       expect(subject.chart.addFromOpenClosed).to.have.been.calledTwice;

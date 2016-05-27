@@ -181,6 +181,54 @@ describe('ChartItem', () => {
       expect(subject.isReducedItem()).to.equal(true);
     });
   });
+
+  describe('#semRes', () => {
+    it('returns [] for predicted edge (A -> . A)', () => {
+      subject = new ChartItem({ rule: new Rule(lhs, [lhs]), dot: 0, sidx: 0, eidx: 0 });
+      expect(subject.semRes()).to.eql([]);
+    });
+
+    it('shuld use history `termMatch` for terminal symbol (A->"x".)', () => {
+      const ruleX = new Rule(lhs, [new Terminal('x')], x => x);
+      const open = new ChartItem({ rule: ruleX, dot: 0, sidx: 0, eidx: 0 });
+      subject = new ChartItem({ rule: ruleX, dot: 1, sidx: 0, eidx: 1, open, termMatch: 'x' });
+      expect(subject.semRes()).to.eql(['x']);
+    });
+
+    it('it should recursivly use semRes of open & closed edgres (A->B C.)', () => {
+      const ruleABC = new Rule(
+        new NonTerminal('A'),
+        [new NonTerminal('B'), new NonTerminal('C')],
+        (b, c) => [b, c]
+      );
+      const ruleB = new Rule(new NonTerminal('B'), []);
+
+      const open = new ChartItem({ rule: ruleABC, dot: 1, sidx: 0, eidx: 0 });
+      open._semRes = ['variant B1', 'variant B2'];
+      const closed = new ChartItem({ rule: ruleB, dot: 0, sidx: 0, eidx: 0 });
+      closed._semRes = ['variant C1', 'variant C2'];
+
+      subject = new ChartItem({
+        rule: ruleABC,
+        dot: 2,
+        sidx: 0,
+        eidx: 0,
+        open,
+        closed,
+      });
+      //const util = require('util');
+      //console.log(util.inspect(subject, {showHidden: false, depth: null}));
+      expect(subject.semRes()).to.eql([
+        ['variant B1', 'variant C1'],
+        ['variant B1', 'variant C2'],
+        ['variant B2', 'variant C1'],
+        ['variant B2', 'variant C2'],
+      ]);
+    });
+    context('when history contains alternatives', () => {
+      it('shuld permutate all alternatives A -> B C.');
+    });
+  });
 });
 
 
@@ -240,7 +288,7 @@ describe('Chart', () => {
   describe('#add', () => {
     it('add chart item when no already exists', () => {
       const chartItem = new ChartItem({ rule });
-      subject.add(chartItem);
+      subject._add(chartItem);
       expect(subject.hypothesis).to.eql([chartItem]);
     });
 
@@ -254,8 +302,8 @@ describe('Chart', () => {
       const chartItem2 = new ChartItem({ sidx: 0, eidx: 1, dot: 0, rule });
       chartItem2.history.push(history);
 
-      subject.add(chartItem1);
-      subject.add(chartItem2);
+      subject._add(chartItem1);
+      subject._add(chartItem2);
       expect(subject.hypothesis).to.eql([chartItem1]);
       expect(subject.hypothesis[0].history).to.eql([history]);
     });
@@ -265,8 +313,8 @@ describe('Chart', () => {
     it('retun iterator over reduced items', () => {
       const chartItem1 = new ChartItem({ sidx: 10, rule, dot: 100 });
       const chartItem2 = new ChartItem({ sidx: 10, rule: new Rule(lhs, []) });
-      subject.add(chartItem1);
-      subject.add(chartItem2);
+      subject._add(chartItem1);
+      subject._add(chartItem2);
 
       const result = subject.getReduced(
         lhs,
@@ -279,7 +327,7 @@ describe('Chart', () => {
 
     it('should not return not reduced items', () => {
       const chartItem = new ChartItem({ sidx: 10, rule, eidx: 11 });
-      subject.add(chartItem);
+      subject._add(chartItem);
       const result = subject.getReduced(
         lhs,
         10
@@ -296,8 +344,8 @@ describe('Chart', () => {
       const chartItem1 = new ChartItem({ rule: rule1, eidx: 15, dot: 0 });
       const chartItem2 = new ChartItem({ rule: rule2, eidx: 15, dot: 1 });
 
-      subject.add(chartItem1);
-      subject.add(chartItem2);
+      subject._add(chartItem1);
+      subject._add(chartItem2);
 
       const result = subject.getWaiting(terminal, 15);
       expect(Array.from(result)).to.eql([chartItem1, chartItem2]);
@@ -312,7 +360,7 @@ describe('Chart', () => {
 
     it('return charItem when exists', () => {
       const chartItem = new ChartItem({ rule });
-      subject.add(chartItem);
+      subject._add(chartItem);
       expect(subject.find(new ChartItem({ rule }))).to.equal(chartItem);
     });
   });
@@ -330,7 +378,7 @@ describe('Chart', () => {
         eidx: 8,
       });
       const open = new ChartItem({ rule: ruleS2termE, sidx: 5, eidx: 5, dot: 0 });
-      subject.add(open);
+      subject._add(open);
       subject.addFromOpenClosed(open, reducedChartItem);
       const newEdge = subject.hypothesis[1];
       expect(newEdge.sidx).to.equal(5);
@@ -369,13 +417,13 @@ describe('Chart', () => {
   describe('#next', () => {
     it('return next item form agenda', () => {
       const chartItem = new ChartItem({ rule });
-      subject.add(chartItem);
+      subject._add(chartItem);
       expect(subject.next()).to.equal(chartItem);
     });
 
     it('put item form agenda to chart', () => {
       const chartItem = new ChartItem({ rule });
-      subject.add(chartItem);
+      subject._add(chartItem);
       subject.next();
       expect(subject.hypothesisIdx).to.equal(1);
     });

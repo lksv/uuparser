@@ -1,3 +1,5 @@
+'use strict';
+
 const Chart = require('./chart').Chart;
 const DefaultLogger = require('../utils/logger');
 
