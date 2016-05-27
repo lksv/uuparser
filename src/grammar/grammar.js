@@ -14,7 +14,7 @@ class Grammar {
   /**
    * Adds *rule* to the grammar
    * @param {Rule} rule Rule to add
-   * @returns this
+   * @returns {Grammar} self
    */
   addRule(rule) {
     const lhsCode = rule.lhs.code;
@@ -33,7 +33,7 @@ class Grammar {
 
   /**
    * Returns list of rules which starts *symbol*
-   * @param {GrmSymbol} symbol
+   * @param {GrmSymbol} symbol Symbol to search
    * @returns {Array} Array of Rules.
    */
   rulesByFirstRhs(symbol) {

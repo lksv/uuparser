@@ -3,6 +3,11 @@ module.exports = {
     "plugins": [
         //"react"
     ],
+    "rules": {
+      "valid-jsdoc": "error",
+      // it temporary - waiting to node support modules natively
+      "strict": [0, "global"],
+    },
     "globals": {
       "after": false,
       "afterEach": false,
@@ -10,6 +15,7 @@ module.exports = {
       "beforeEach": false,
       "describe": false,
       "it": false,
-      "require": false
+      "require": false,
+      "context": false
     },
 };

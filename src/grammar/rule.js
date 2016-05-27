@@ -1,8 +1,6 @@
 'use strict';
 
-var symbols = require('./symbol'),
-  GrmSymbol = symbols.GrmSymbol,
-  NonTerminal = symbols.NonTerminal;
+const { GrmSymbol, NonTerminal } = require('./symbol');
 
 class Rule {
 
@@ -20,7 +18,7 @@ class Rule {
    * @param {NonTerminal} lhs Left Hand Side of the rule
    * @param {Array} rhs Right Hand Side of the rule (arry of symbols)
    * @param {Function} semRes Callback for generating AST Node
-   * @param {Object} option Rule options
+   * @param {Object} options Rule options
    */
   constructor(lhs, rhs, semRes, options = {}) {
     if (!(lhs instanceof NonTerminal)) {
@@ -42,7 +40,7 @@ class Rule {
   }
 
   toString() {
-    var res = [`${this.lhs} -> ${this.rhs.join(' ')}`];
+    const res = [`${this.lhs} -> ${this.rhs.join(' ')}`];
     if (this.semRes) {
       res.push(`{{ ${this.semRes} }}`);
     }

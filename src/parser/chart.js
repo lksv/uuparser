@@ -29,6 +29,7 @@ class ChartItemHistory {
     this.closed = closed;
     this.termMatch = termMatch || [];
 
+    // eslint-disable-next-line
     this.code = (this.open ? this.open.code : 'null') +
       ':' +
       (this.closed ? this.closed.code : 'null');
@@ -54,7 +55,7 @@ class ChartItem {
     this.sidx = cloneFrom2.sidx || cloneFrom.sidx;
     this.eidx = cloneFrom2.eidx || cloneFrom.eidx;
     this.rule = cloneFrom2.rule || cloneFrom.rule;
-    this.dot  = cloneFrom2.dot  || cloneFrom.dot || 0;
+    this.dot  = cloneFrom2.dot  || cloneFrom.dot || 0; // eslint-disable-line
 
     const open = cloneFrom2.open || cloneFrom.open;
     const closed = cloneFrom2.closed || cloneFrom.closed;
@@ -78,6 +79,7 @@ class ChartItem {
 
   /** An ChartItem with dot in from of Terminal (RegExpTerminal, ...)
    * is called shift item.
+   * @return {Boolean} true when the symbol under the dot is Terminal, otherwise false
    */
   isShiftItem() {
     return !(this.nextSymbol() instanceof NonTerminal);
@@ -86,6 +88,7 @@ class ChartItem {
   /**
    * An ChartItem with dot at the end (i.e. dot is after the RHS)
    * is called reduced item.
+   * @returns {Boolean} true when the dot is at the end.
    */
   isReducedItem() {
     return !this.nextSymbol();
@@ -94,6 +97,7 @@ class ChartItem {
   /**
    * An ChartItem with dot at beginnging (i.g. dot is in front of RHS)
    * is called predicted item.
+   * @returns {Boolean} true when the dot is at beginnging
    */
   isPredictedItem() {
     return this.dot === 0;
@@ -105,7 +109,7 @@ class ChartItem {
    *  * not reduced it returns array of semantic representation of all symbols before a dot.
    *  * reduced than it returns all posible semantic representation as an Array of Objects.
    *
-   * @returns [Array] array of Objects (AST Nodes)
+   * @returns {Array} array of Objects (AST Nodes)
    */
   semRes() {
     // if already cached return it now
@@ -114,7 +118,7 @@ class ChartItem {
     // predicted adges has empty semRes - we are in fixed point of the recursion.
     if (this.isPredictedItem()) return [null];
 
-    //calculate semRes for all RHS's symbols (before the dot)
+    // calculate semRes for all RHS's symbols (before the dot)
     let semRes = [];
     this.history.forEach(h => {
       const openSemRes = h.open.semRes();
@@ -122,8 +126,8 @@ class ChartItem {
       // taken directly
       const closedSemRes = h.termMatch ? h.termMatch : h.closed.semRes();
       // TODO: if osr is empty, use only closedSemRes
-      for (let osr of openSemRes) {
-        for (let csr of closedSemRes) {
+      for (const osr of openSemRes) {
+        for (const csr of closedSemRes) {
           semRes.push([osr, csr]);
         }
       }
@@ -143,7 +147,7 @@ class ChartItem {
    * Throws exception if this and other differs
    *
    * @param {ChartItem} other The source of history
-   * @returns {this}
+   * @returns {undefined}
    */
   copyHistoryFrom(other) {
     if (this.code !== other.code) {
@@ -159,7 +163,7 @@ class ChartItem {
   }
 
   /**
-   * Goes recursively by history edges (i.e open and close edges) and mark 
+   * Goes recursively by history edges (i.e open and close edges) and mark
    * each child edge as marked.
    *
    * It is used "internally" to find supremum of reducedRules edges which are
@@ -169,6 +173,7 @@ class ChartItem {
    *
    * It does not mark first *nested* direct children.
    * @param {Number} nested From which generation (recursively) mark the childer
+   * @returns {undefined}
    */
   deepMark(nested) {
     if (nested <= 0) this.marked = true;
@@ -180,7 +185,7 @@ class ChartItem {
 
   toString() {
     const rhsBeforeDot = this.rule.rhs.slice(0, this.dot);
-    const rhsAfterDot  = this.rule.rhs.slice(this.dot);
+    const rhsAfterDot  = this.rule.rhs.slice(this.dot); // eslint-disable-line
     return `${this.lhs} -> ${rhsBeforeDot.join(' ')} . ${rhsAfterDot.join(' ')}\t` +
       `[${this.sidx}, ${this.eidx}]`;
   }
@@ -209,8 +214,8 @@ class ChartItemIndex {
 
   /**
    * Get the ChartItems indexed by the *symbol* and *idx*
-   * @param {GrmSymbol} symbol
-   * @param {Nuber} idx
+   * @param {GrmSymbol} symbol Symbol to search
+   * @param {Nuber} idx Index to search
    * @returns {Iterator} Iterator over indexed ChartItems
    */
   get(symbol, idx) {
@@ -227,9 +232,9 @@ class ChartItemIndex {
   /**
    * Store/index the *chartItem* indexed by the *symbol* and *idx*
    *
-   * @param {GrmSymbol} symbol
-   * @param {Number} idx
-   * @param {ChartItem} chartItem
+   * @param {GrmSymbol} symbol Symbol to index by
+   * @param {Number} idx Number to index by
+   * @param {ChartItem} chartItem Edge to store
    * @returns {void}
    */
   add(symbol, idx, chartItem) {
@@ -271,12 +276,17 @@ class Chart {
     // Used to not add already exist chartItem
     this.existChartItems = new Set();
 
-    this.logger = logger || new DefaultLogger;
+    this.logger = logger || new DefaultLogger();
   }
 
   /**
    * Add chartItem to the agenda
    * it also update all indexes (waitingRules, reducedRules)
+   *
+   * Private method, use #addFromOpenClosed, #addPredicted, #addScanned instead
+   *
+   * @param {ChartItem} chartItem Edge to store
+   * @returns {undefined}
    */
   add(chartItem) {
     const alreadyExists = this.find(chartItem);
@@ -308,6 +318,7 @@ class Chart {
    *
    * @param {ChartItem} open - open edge
    * @param {ChartItem} closed - closed edge
+   * @returns {undefined}
    */
   addFromOpenClosed(open, closed) {
     const newEdge = new ChartItem(open, {
@@ -322,12 +333,15 @@ class Chart {
 
   /**
    * Add new (predicted) edge to the agenda
+   * @param {Rule} rule Grammar rule to create edge for
+   * @param {Number} idx The *sidx* and *eidx* initial values
+   * @returns {undefined}
    */
   addPredicted(rule, idx) {
     const newEdge = new ChartItem({
       sidx: idx,
       eidx: idx,
-      dot:  0,
+      dot:  0,  //eslint-disable-line
       rule,
     });
     this.logger.debug(`  addPredicted: ${newEdge}`);
@@ -339,7 +353,9 @@ class Chart {
    *
    * @param {ChartItem} chartItem Edge to process
    * @param {Number} eidx Index in input we are consumed to
-   * @param {Object} semRes result of *match* symbol.method (usually the string we consumed from input)
+   * @param {Object} termMatch result of *match* symbol.method
+   *                            (usually the string we consumed from input)
+   * @returns {undefined}
    */
   addScanned(chartItem, eidx, termMatch) {
     const newEdge = new ChartItem(chartItem, {
@@ -379,6 +395,8 @@ class Chart {
    * returns reduced edges from chart (and agenda) which parse *entity* rule
    * and only that which are not children (not in the history) of
    * another parentEntities
+   *
+   * @returns {Array} Filtered array of chartItems form chart
    */
   parentEntities() {
     const allEntities = this.hypothesis.filter(edge => edge.rule.entity && edge.isReducedItem());

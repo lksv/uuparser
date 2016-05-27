@@ -1,6 +1,9 @@
 /**
  * The simplest possible implementation of logger
  */
+
+/* eslint-disable no-alert, no-console */
+
 class Logger {
   constructor() {
     this.level = 2; // DEBUG

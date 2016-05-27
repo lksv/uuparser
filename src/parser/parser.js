@@ -6,13 +6,12 @@ class Parser {
     if (['bottomUp', 'topDown'].indexOf(type) === -1) {
       throw new Error('Unknown parser type!');
     }
-    this.logger = opts.logger || new DefaultLogger;
+    this.logger = opts.logger || new DefaultLogger();
 
     this.grammar = grammar;
     this.type = type;
     this.lexer = opts.lexer || Parser.defaultLexer;
     this.chart = new Chart(this.logger);
-
   }
 
   /**
@@ -24,6 +23,9 @@ class Parser {
    * Anytime:
    *   For all edges as A -> α•Bβ <openSidx, openEidx>
    *   put new edge: A -> αB•β <openSidx, closedEidx> to the agenda
+   *
+   * @param {ChartItem} reducedChartItem Edge to process
+   * @returns {undefined}
    */
   completer(reducedChartItem) {
     if (this.type === 'bottomUp') {
@@ -39,7 +41,7 @@ class Parser {
       reducedChartItem.lhs,
       reducedChartItem.sidx
     );
-    for (let open of waitingIter) {
+    for (const open of waitingIter) {
       this.chart.addFromOpenClosed(open, reducedChartItem);
     }
   }
@@ -52,6 +54,8 @@ class Parser {
    * Anytime:
    *   For each edge as B → γ• <closedSidx, closedEidx>
    *   put new edge A -> αB•β <openSidx, closedEidx> to the agenda
+   * @param {ChartItem} open Edge to process
+   * @returns {undefined}
    */
   predictor(open) {
     if (this.type === 'topDown') {
@@ -66,11 +70,18 @@ class Parser {
       open.nextSymbol(),
       open.eidx
     );
-    for (let closed of reducedIter) {
+    for (const closed of reducedIter) {
       this.chart.addFromOpenClosed(open, closed);
     }
   }
 
+  /**
+   * For given edge as A -> α•aβ <sidx, eidx>
+   * try to match terminal `a` in input string from position *eidx*
+   *
+   * @param {ChartItem} chartItem Edge to process
+   * @return {undefined}
+   */
   scanner(chartItem) {
     const symbol = chartItem.nextSymbol();
     // const [res, eidx] = symbol.match(this.input, chartItem.eidx);
@@ -80,19 +91,32 @@ class Parser {
     }
   }
 
-  next(currentChartItem) {
+  /**
+   * Process given *chartItem*.
+   * It may produce new edges stored in agenda.
+   *
+   * @param {ChartItem} chartItem Edge to process
+   * @returns {undefined}
+   */
+  next(chartItem) {
     // when dot is at the end
-    if (currentChartItem.isReducedItem()) {
-      this.completer(currentChartItem);
-    } else if (currentChartItem.isShiftItem()) {
+    if (chartItem.isReducedItem()) {
+      this.completer(chartItem);
+    } else if (chartItem.isShiftItem()) {
       // when after dot is terminal
-      this.scanner(currentChartItem);
+      this.scanner(chartItem);
     } else {
       // when after dot is non-terminal
-      this.predictor(currentChartItem);
+      this.predictor(chartItem);
     }
   }
 
+  /**
+   * Parse given *input* string and generate all posible edges to chart
+   *
+   * @param {String} input Input string to parse
+   * @return {undefined}
+   */
   parse(input) {
     let currentChartItem;
     // TODO: do not like when setting "state" (e.i. input) here,
@@ -100,11 +124,23 @@ class Parser {
     // is quite over-whatever... :(
     this.input = input;
 
+    // eslint-disable-next-line
     while (currentChartItem = this.chart.next()) {
       this.next(currentChartItem);
     }
   }
 
+  /**
+   * Try to match given *symbol* in *inputString* from *sidx* position.
+   * Returns array of two items:
+   * * matched string
+   * * position in *inputString* upto the symbol was matched to
+   *
+   * @param {Symbol} symbol Nonterminal to match
+   * @param {String} inputString Input string
+   * @param {Number} sidx Position to match from
+   * @returns {Array} Matched string and eidx position
+   */
   static defaultLexer(symbol, inputString, sidx) {
     const [res, eidx] = symbol.match(inputString, sidx);
     if (!res) {

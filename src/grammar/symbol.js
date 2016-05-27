@@ -3,9 +3,6 @@
 /**
  * GrmSybol - it is an abstract class - mainly NonTerminal and Terminal are
  * inherited from GrmSymbol
- *
- * @param {String} name
- *
  */
 class GrmSymbol {
   /**
@@ -23,8 +20,6 @@ class GrmSymbol {
 /**
  * Represents NonTerminal of grammar
  * It is defined only by name
- *
- * @param {String} Name
  */
 class NonTerminal extends GrmSymbol {
   toString() {

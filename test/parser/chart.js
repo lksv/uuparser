@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-expressions */
+
 const expect = require('chai').expect;
 
 const parser = require('../..');
@@ -11,9 +13,8 @@ const Chart = parser.Chart;
 
 const lhs = new NonTerminal('A');
 
-const rule = new Rule(new NonTerminal('A'), [new NonTerminal('B')]);
-
 describe('ChartItemHistory', () => {
+  const rule = new Rule(new NonTerminal('A'), [new NonTerminal('B')]);
   // TODO: it's integration test, not unit
   describe('.code', () => {
     const chartItem1 = new ChartItem({
@@ -214,7 +215,6 @@ describe('ChartItemIndex', () => {
       subject.add(lhs, 0, chartItem1);
       subject.add(lhs, 0, chartItem1);
       subject.add(lhs, 0, new ChartItem(chartItem1));
-      console.log(Array.from(subject.get(lhs, 0)));
       expect(Array.from(subject.get(lhs, 0))).to.eql([chartItem1]);
     });
 
@@ -231,6 +231,7 @@ describe('ChartItemIndex', () => {
 
 
 describe('Chart', () => {
+  const rule = new Rule(new NonTerminal('A'), [new NonTerminal('B')]);
   let subject;
   beforeEach(() => {
     subject = new Chart();
