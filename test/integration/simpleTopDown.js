@@ -19,6 +19,7 @@ const {
 const ruleS = new Rule(
   new NonTerminal('S'), [
     new Terminal('Hello'),
+    new Terminal('my'),
     new NonTerminal('WORLD'),
     new Terminal('!'),
     new Terminal('I am'),
@@ -54,7 +55,7 @@ parser.chart._add(new ChartItem({
   dot: 0,
   rule: ruleS,
 }));
-parser.parse('Hello WORLD! I am Lukáš');
+parser.parse('Hello my WORLD! I am Lukáš');
 
 const parsedEdges = parser.chart.parentEntities();
 console.log(parsedEdges);

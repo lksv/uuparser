@@ -16,6 +16,7 @@
  *
  */
 const NonTerminal = require('../grammar').NonTerminal;
+const { NodeResult, NodeResultArgs } = require ('./semres');
 const DefaultLogger = require('../utils/logger');
 
 /**
@@ -58,6 +59,7 @@ class ChartItem {
     this.eidx = cloneFrom2.eidx || cloneFrom.eidx;
     this.rule = cloneFrom2.rule || cloneFrom.rule;
     this.dot  = cloneFrom2.dot  || cloneFrom.dot || 0; // eslint-disable-line
+    this._marked = false;
 
     const open = cloneFrom2.open || cloneFrom.open;
     const closed = cloneFrom2.closed || cloneFrom.closed;
@@ -105,61 +107,53 @@ class ChartItem {
     return this.dot === 0;
   }
 
-  /** Returns AST (semantic representation)
-   * If edge is:
-   *  * predicted than semantic representation is [].
-   *  * not reduced it returns array of semantic representation of all symbols before a dot.
-   *  * reduced than it returns all posible semantic representation as an Array of Objects.
+  /**
+   * Returns array of:
+   * * NodeResult for reduced edges
+   * * NodeResultArgs otherwise
    *
-   * @returns {Array} array of Objects (AST Nodes)
+   * @param {Number} nested recursive counder
+   * @returns {Array} array of NodeResultArgs or NodeResult
    */
   semRes(nested = 0) {
-    // if already cached return it now
-    if (this._semRes) return this._semRes;
+    var util = require('util');
+    if (this.isPredictedItem() && this.isReducedItem()) {
+      return [new NodeResultArgs([]).apply(
+        this.rule.semRes,
+        this.rule.weight,
+        this.rule.priority
+      )];
+    }
+    if (this.isPredictedItem()) {
+      return [new NodeResultArgs([])];
+    }
 
     console.log(`${' '.repeat(nested * 2)}entering semRes ${this.toString()}`);
 
-    // empty rule - just call and return semRes callback with no arguments
-    if (this.isPredictedItem() && this.isReducedItem()) {
-      return this.rule.semRes.apply(undefined);
-    }
-    // predicted adges has empty semRes - we are in fixed point of the recursion.
-    if (this.isPredictedItem()) return [];
-
-    // calculate semRes for all RHS's symbols (before the dot)
-    let rhsNodes = [];
+    var nodeResultsArgs = [];
     this.history.forEach(h => {
       const openSemRes = h.open.semRes(nested + 1);
-      console.log('openSemRes:', openSemRes);
-      // history has semRes for shift items, i.e. semRes of Terminal is
-      // taken directly
-      const closedSemRes = h.termMatch ? h.termMatch : h.closed.semRes(nested + 1);
-      console.log('closedSemRes:', closedSemRes);
-      if (!openSemRes || openSemRes.length === 0) {
-        for (const csr of closedSemRes) {
-          rhsNodes.push([csr]);
-        }
-      } else {
-        for (const osr of openSemRes) {
-          for (const csr of closedSemRes) {
-            rhsNodes.push(osr.concat(csr));
-          }
-        }
-      }
+      const closedSemRes = h.termMatch ?
+        [new NodeResult(h.termMatch, 1.0, `"${h.termMatch}"`)] : h.closed.semRes(nested + 1);
+      console.log('openSemRes: ', util.inspect(openSemRes, false, 6, true));
+      console.log('closedSemRes: ', util.inspect(closedSemRes, false, 6, true));
+      openSemRes.map(nrArgs => {
+        const x = nrArgs.multiply(closedSemRes);
+        nodeResultsArgs = nodeResultsArgs.concat(x);
+      });
     });
-    console.log('permutated semRes:', rhsNodes);
+
     if (this.isReducedItem()) {
-      console.log(`${' '.repeat(nested * 2)}calling callback for ${this.toString()}`);
-      rhsNodes = rhsNodes.map(s => this.rule.semRes.apply(undefined, s));
-      console.log('result:', rhsNodes);
+      const res = nodeResultsArgs.map(res => res.apply(
+        this.rule.semRes,
+        this.rule.weight,
+        this.rule.lhs.name
+      ));
+      console.log(`${' '.repeat(nested * 2)}leaving closed semRes ${this.toString()} with result:${util.inspect(res, false, 6, true)}`);
+      return res;
     }
-    // Cache the result. Result can be requested form different parent places
-    // therefore caching is needed.
-    this._semRes = rhsNodes;
-
-    console.log(`${' '.repeat(nested * 2)}leaving semRes ${this.toString()} with result:${rhsNodes}`);
-
-    return rhsNodes;
+    console.log(`${' '.repeat(nested * 2)}leaving open semRes ${this.toString()} with result:${util.inspect(nodeResultsArgs, false, 6, true)}`);
+    return nodeResultsArgs;
   }
 
   /**
