@@ -16,7 +16,7 @@
  *
  */
 const NonTerminal = require('../grammar').NonTerminal;
-const { NodeResult, NodeResultArgs } = require ('./semres');
+const { NodeResult, NodeResultArgs } = require('./semres');
 const DefaultLogger = require('../utils/logger');
 
 /**
@@ -113,47 +113,76 @@ class ChartItem {
    * * NodeResultArgs otherwise
    *
    * @param {Number} nested recursive counder
+   * @param {Logger} [logger=undefined] logger to log semRes computation
    * @returns {Array} array of NodeResultArgs or NodeResult
    */
-  semRes(nested = 0) {
-    var util = require('util');
+  semRes(nested = 0, logger) {
+    if (this._semRes) {
+      return this._semRes;
+    }
+
     if (this.isPredictedItem() && this.isReducedItem()) {
       return [new NodeResultArgs([]).apply(
         this.rule.semRes,
         this.rule.weight,
-        this.rule.priority
+        this.rule.lhs.name
       )];
     }
     if (this.isPredictedItem()) {
       return [new NodeResultArgs([])];
     }
 
-    console.log(`${' '.repeat(nested * 2)}entering semRes ${this.toString()}`);
+    const indentLogger = this.logger ? this._logIndent.bind(
+      this,
+      logger,
+      nested * 2
+    ) : () => undefined;
+    indentLogger(() => `Entering semRes ${this.toString()}`);
 
-    var nodeResultsArgs = [];
+    let nodeResultsArgs = []; // eslint-disable-line vars-on-top
     this.history.forEach(h => {
-      const openSemRes = h.open.semRes(nested + 1);
-      const closedSemRes = h.termMatch ?
-        [new NodeResult(h.termMatch, 1.0, `"${h.termMatch}"`)] : h.closed.semRes(nested + 1);
-      console.log('openSemRes: ', util.inspect(openSemRes, false, 6, true));
-      console.log('closedSemRes: ', util.inspect(closedSemRes, false, 6, true));
-      openSemRes.map(nrArgs => {
-        const x = nrArgs.multiply(closedSemRes);
-        nodeResultsArgs = nodeResultsArgs.concat(x);
+      const openSemRes = h.open.semRes(nested + 1, logger);
+      const closedSemRes = h.termMatch
+        ? [new NodeResult(h.termMatch, 1.0, `"${h.termMatch}"`)]
+        : h.closed.semRes(nested + 1, logger);
+      indentLogger(() => `OpenSemRes: ${this._nrsToString(openSemRes)}`);
+      indentLogger(() => `ClosedSemRes: ${this._nrasToString(closedSemRes)}`);
+      openSemRes.forEach(nrArgs => {
+        const t = nrArgs.multiply(closedSemRes);
+        nodeResultsArgs = nodeResultsArgs.concat(t);
       });
     });
 
     if (this.isReducedItem()) {
-      const res = nodeResultsArgs.map(res => res.apply(
+      const res = nodeResultsArgs.map(nra => nra.apply(
         this.rule.semRes,
         this.rule.weight,
         this.rule.lhs.name
       ));
-      console.log(`${' '.repeat(nested * 2)}leaving closed semRes ${this.toString()} with result:${util.inspect(res, false, 6, true)}`);
+      indentLogger(() =>
+       `Leaving closed  semRes ${this.toString()} with result: ${this._nrsToString(res)}`
+      );
+      this._semRes = res;
       return res;
     }
-    console.log(`${' '.repeat(nested * 2)}leaving open semRes ${this.toString()} with result:${util.inspect(nodeResultsArgs, false, 6, true)}`);
+    indentLogger(() =>
+      `Leaving open semRes ${this.toString()} with results: ${this._nrasToString(nodeResultsArgs)}`
+    );
+    this._semRes = nodeResultsArgs;
     return nodeResultsArgs;
+  }
+
+  _nrsToString(nrs) {
+    return nrs.map(nr => nr.toString()).join(', ');
+  }
+
+  _nrasToString(nras) {
+    return nras.map(nra => nra.toString()).join(', ');
+  }
+
+  _logIndent(logger, indent, str) {
+    const spaces = ' '.repeat(indent);
+    logger.debug(`${spaces}${str()}`);
   }
 
   /**
@@ -380,6 +409,28 @@ class Chart {
     });
     this.logger.debug(`  addScanner: ${newEdge}`);
     this._add(newEdge);
+  }
+
+  // TODO: test missing
+  addInitial(idx, rule, eidx, termMatch) {
+    const open = new ChartItem({
+      dot: 0,
+      sidx: idx,
+      eidx: idx,
+      rule,
+    });
+    this._add(open);
+
+    if (Number.isInteger(eidx) && (termMatch !== undefined)) {
+      this._add(new ChartItem({
+        dot: 1,
+        sidx: idx,
+        eidx,
+        rule,
+        open,
+        termMatch,
+      }));
+    }
   }
 
   getReduced(symbol, idx) {

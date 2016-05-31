@@ -126,10 +126,31 @@ class Parser {
     // is quite over-whatever... :(
     this.input = input;
 
+    if (this.type === 'bottomUp') this.initBottomUp();
+    if (this.type === 'topDown') this.initTopDown();
+
     // eslint-disable-next-line
     while (currentChartItem = this.chart.next()) {
       this.next(currentChartItem);
     }
+  }
+
+  initTopDown() {
+    this.grammar.entityRules().forEach(
+      rule => this.chart.addInitial(0, rule)
+    );
+  }
+
+  initBottomUp() {
+    this.grammar.terminalStartRules().forEach(
+      // TODO(?): for speedup is added both edge now
+      // on the other hand code will be less maintainable
+      rule => {
+        rule.matchAll(
+          ([match, sidx, eidx]) => this.chart.addInitial(sidx, rule, eidx, match)
+        );
+      }
+    );
   }
 
   /**

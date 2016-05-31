@@ -11,6 +11,13 @@ describe('NodeResult', () => {
     expect(subject.weight).to.equal(0.5);
     expect(subject.txt).to.equal('("1"), "+", ("1")');
   });
+
+  describe('#toString', () => {
+    it('should serialize data, weight and txt to string', () => {
+      const subject = new NodeResult('data', 0.5, 'txt');
+      expect(subject.toString()).to.equal('NodeResult(data, 0.5, txt)');
+    });
+  });
 });
 
 describe('NodeResultArgs', () => {
@@ -31,6 +38,17 @@ describe('NodeResultArgs', () => {
 
     const subjectWithArray = () => new NodeResultArgs(['x']);
     expect(subjectWithArray).to.throw(/Not an array of NodeResults/);
+  });
+
+  describe('#toString', () => {
+    it('should serialize array of NodeResults to string', () => {
+      const subject = new NodeResultArgs([
+        new NodeResult('RHS1-A', 1.0, 'txt1'), new NodeResult('RHS2-A', 0.5, 'txt2'),
+      ]);
+      expect(subject.toString()).to.equal(
+        'NodeResultArgs(NodeResult(RHS1-A, 1, txt1), NodeResult(RHS2-A, 0.5, txt2))'
+      );
+    });
   });
 
   describe('#multiply', () => {

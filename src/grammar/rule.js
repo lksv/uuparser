@@ -34,6 +34,7 @@ class Rule {
     this.rhs = rhs;
     this.semRes = semRes;
     this.entity = options.entity;
+    this.weight = (options.weight === undefined) ? 1.0 : options.weight;
     this.options = options;
 
     this.hashCode = this.toString();

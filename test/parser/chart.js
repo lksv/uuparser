@@ -3,13 +3,17 @@
 const expect = require('chai').expect;
 
 const parser = require('../..');
-const Rule = parser.Rule;
-const Terminal = parser.Terminal;
-const NonTerminal = parser.NonTerminal;
-const ChartItemHistory = parser.ChartItemHistory;
-const ChartItem = parser.ChartItem;
-const ChartItemIndex = parser.ChartItemIndex;
-const Chart = parser.Chart;
+const {
+  Rule,
+  Terminal,
+  NonTerminal,
+  ChartItemHistory,
+  ChartItem,
+  ChartItemIndex,
+  Chart,
+  NodeResultArgs,
+  NodeResult,
+} = parser;
 
 const lhs = new NonTerminal('A');
 
@@ -183,30 +187,47 @@ describe('ChartItem', () => {
   });
 
   describe('#semRes', () => {
-    it('returns [] for predicted edge (A -> . A)', () => {
+    it('returns array with rule.semRes() applied to empty NodeResultArgs for A -> .', () => {
+      subject = new ChartItem({
+        rule: new Rule(lhs, [], () => 'Yes', { weight: 0.7 }),
+        dot: 0,
+        sidx: 0,
+        eidx: 0,
+      });
+
+      expect(subject.semRes()).to.eql([
+        new NodeResult('Yes', 0.7, 'A()'),
+      ]);
+    });
+
+    it('returns [NodeResultArgs()] for predicted edge (A -> . A)', () => {
       subject = new ChartItem({ rule: new Rule(lhs, [lhs]), dot: 0, sidx: 0, eidx: 0 });
-      expect(subject.semRes()).to.eql([]);
+      expect(subject.semRes()).to.eql([
+        new NodeResultArgs([]),
+      ]);
     });
 
     it('shuld use history `termMatch` for terminal symbol (A->"x".)', () => {
-      const ruleX = new Rule(lhs, [new Terminal('x')], x => x);
+      const ruleX = new Rule(lhs, [new Terminal('x')], x => x.data);
       const open = new ChartItem({ rule: ruleX, dot: 0, sidx: 0, eidx: 0 });
       subject = new ChartItem({ rule: ruleX, dot: 1, sidx: 0, eidx: 1, open, termMatch: 'x' });
-      expect(subject.semRes()).to.eql(['x']);
+      expect(subject.semRes()).to.eql([
+        new NodeResult('x', 1.0, 'A("x")'),
+      ]);
     });
 
     it('it should recursivly use semRes of open & closed edgres (A->B C.)', () => {
       const ruleABC = new Rule(
         new NonTerminal('A'),
         [new NonTerminal('B'), new NonTerminal('C')],
-        (b, c) => [b, c]
+        (b, c) => `${b.data}:${c.data}`
       );
-      const ruleB = new Rule(new NonTerminal('B'), []);
+      const ruleC = new Rule(new NonTerminal('C'), []);
 
       const open = new ChartItem({ rule: ruleABC, dot: 1, sidx: 0, eidx: 0 });
-      open._semRes = ['variant B1', 'variant B2'];
-      const closed = new ChartItem({ rule: ruleB, dot: 0, sidx: 0, eidx: 0 });
-      closed._semRes = ['variant C1', 'variant C2'];
+      open._semRes = [new NodeResultArgs([new NodeResult('B', 1.0, 'B()')])];
+      const closed = new ChartItem({ rule: ruleC, dot: 0, sidx: 0, eidx: 0 });
+      closed._semRes = [new NodeResult('C', 1.0, 'C()')];
 
       subject = new ChartItem({
         rule: ruleABC,
@@ -216,17 +237,45 @@ describe('ChartItem', () => {
         open,
         closed,
       });
-      //const util = require('util');
-      //console.log(util.inspect(subject, {showHidden: false, depth: null}));
       expect(subject.semRes()).to.eql([
-        ['variant B1', 'variant C1'],
-        ['variant B1', 'variant C2'],
-        ['variant B2', 'variant C1'],
-        ['variant B2', 'variant C2'],
+        new NodeResult('B:C', 1.0, 'A(B(), C())'),
       ]);
     });
     context('when history contains alternatives', () => {
-      it('shuld permutate all alternatives A -> B C.');
+      it('shuld permutate all alternatives A -> B C.', () => {
+        const ruleABC = new Rule(
+          new NonTerminal('A'),
+          [new NonTerminal('B'), new NonTerminal('C')],
+          (b, c) => `${b.data}:${c.data}`
+        );
+        const ruleC = new Rule(new NonTerminal('C'), []);
+
+        const open = new ChartItem({ rule: ruleABC, dot: 1, sidx: 0, eidx: 0 });
+        open._semRes = [
+          new NodeResultArgs([new NodeResult('B1', 1.0, 'B()')]),
+          new NodeResultArgs([new NodeResult('B2', 0.9, 'B()')]),
+        ];
+        const closed = new ChartItem({ rule: ruleC, dot: 0, sidx: 0, eidx: 0 });
+        closed._semRes = [
+          new NodeResult('C1', 1.0, 'C()'),
+          new NodeResult('C2', 0.7, 'C()'),
+        ];
+
+        subject = new ChartItem({
+          rule: ruleABC,
+          dot: 2,
+          sidx: 0,
+          eidx: 0,
+          open,
+          closed,
+        });
+        expect(subject.semRes()).to.eql([
+          new NodeResult('B1:C1', 1.0, 'A(B(), C())'),
+          new NodeResult('B1:C2', 0.7, 'A(B(), C())'),
+          new NodeResult('B2:C1', 0.9, 'A(B(), C())'),
+          new NodeResult('B2:C2', 0.63, 'A(B(), C())'),
+        ]);
+      });
     });
   });
 });

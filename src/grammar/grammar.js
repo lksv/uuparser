@@ -1,3 +1,5 @@
+const Terminal = require('./symbol').Terminal;
+
 class Grammar {
   /**
    * @constructor
@@ -48,6 +50,16 @@ class Grammar {
    */
   rulesByLhs(symbol) {
     return this.lhsRules.get(symbol.code) || [];
+  }
+
+  entityRules() {
+    return this.rules.filter(rule => rule.entity);
+  }
+
+  terminalStartRules() {
+    return this.rules.filter(
+      rule => rule.rhs[0] && (rule.rhs[0] instanceof Terminal)
+    );
   }
 }
 
