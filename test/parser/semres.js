@@ -101,12 +101,49 @@ describe('NodeResultArgs', () => {
   });
 
   describe('#apply', () => {
+    const rhs1 = new NodeResult('RHS1', 1.0, 'rhs1()');
+    const rhs2 = new NodeResult('RHS2', 0.5, 'rhs2()');
+
     it('should calculate text representatin', () => {
-      const rhs1 = new NodeResult('RHS1', 1.0, 'rhs1()');
-      const rhs2 = new NodeResult('RHS2', 0.5, 'rhs2()');
       const subject = new NodeResultArgs([rhs1, rhs2]);
-      expect(subject.apply((a, b) => `${a.data}:${b.data}`, 0.1, 'X')).to.eql(
+      expect(subject.apply((_, a, b) => `${a}:${b}`, 0.1, 'X')).to.eql(
         new NodeResult('RHS1:RHS2', 1.0 * 0.5 * 0.1, 'X(rhs1(), rhs2())')
+      );
+    });
+
+    it('should pass [rshNodesResults, weight, lhsName] as a first argument', () => {
+      const subject = new NodeResultArgs([rhs1, rhs2]);
+      expect(
+        subject.apply(
+          ([rhsNodes, weight, lhsName], a, b) => {
+            expect(weight).to.equal(0.1);
+            expect(lhsName).to.equal('X');
+            expect(rhsNodes).to.eql([rhs1, rhs2]);
+            return `${a}:${b}`;
+          },
+          0.1,
+          'X'
+        )
+      ).to.eql(
+        new NodeResult('RHS1:RHS2', 1.0 * 0.5 * 0.1, 'X(rhs1(), rhs2())')
+      );
+    });
+
+    it('should use NodeResult itself when returned from callback', () => {
+      const subject = new NodeResultArgs([rhs1, rhs2]);
+      const customNodeResult = new NodeResult('data', 0.001, 'Custom TXT');
+      expect(
+        subject.apply(() => customNodeResult, 0.1, 'X')
+      ).to.equal(customNodeResult);
+    });
+
+    it('should use NodeResult and fill weight and txt when returned from callback', () => {
+      const subject = new NodeResultArgs([rhs1, rhs2]);
+      const customNodeResult = new NodeResult('data');
+      expect(
+        subject.apply(() => customNodeResult, 0.1, 'X')
+      ).to.eql(
+        new NodeResult('data', 1.0 * 0.5 * 0.1, 'X(rhs1(), rhs2())')
       );
     });
   });

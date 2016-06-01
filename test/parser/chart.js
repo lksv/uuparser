@@ -208,7 +208,7 @@ describe('ChartItem', () => {
     });
 
     it('shuld use history `termMatch` for terminal symbol (A->"x".)', () => {
-      const ruleX = new Rule(lhs, [new Terminal('x')], x => x.data);
+      const ruleX = new Rule(lhs, [new Terminal('x')], (_, x) => x);
       const open = new ChartItem({ rule: ruleX, dot: 0, sidx: 0, eidx: 0 });
       subject = new ChartItem({ rule: ruleX, dot: 1, sidx: 0, eidx: 1, open, termMatch: 'x' });
       expect(subject.semRes()).to.eql([
@@ -220,7 +220,7 @@ describe('ChartItem', () => {
       const ruleABC = new Rule(
         new NonTerminal('A'),
         [new NonTerminal('B'), new NonTerminal('C')],
-        (b, c) => `${b.data}:${c.data}`
+        (_, b, c) => `${b}:${c}`
       );
       const ruleC = new Rule(new NonTerminal('C'), []);
 
@@ -246,7 +246,7 @@ describe('ChartItem', () => {
         const ruleABC = new Rule(
           new NonTerminal('A'),
           [new NonTerminal('B'), new NonTerminal('C')],
-          (b, c) => `${b.data}:${c.data}`
+          (_, b, c) => `${b}:${c}`
         );
         const ruleC = new Rule(new NonTerminal('C'), []);
 

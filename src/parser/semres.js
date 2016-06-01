@@ -78,7 +78,19 @@ class NodeResultArgs {
    * @returns {NodeResult} calculated NodeResult
    */
   apply(callback, weight, lhsName) {
-    const callbackResult = callback.apply(undefined, this.array);
+    const callbackArgs = [[this.array, weight, lhsName]].concat(this.array.map(d => d.data));
+    const callbackResult = callback.apply(undefined, callbackArgs);
+    // when callback already returns NodeResult instance, use it directly
+    if (callbackResult instanceof NodeResult) {
+      if (callbackResult.weight === undefined) {
+        callbackResult.weight = this.array.reduce((prev, nr) => prev * nr.weight, 1.0) * weight;
+      }
+      if (callbackResult.txt === undefined) {
+        callbackResult.txt = `${lhsName}(${this.array.map(nr => nr.txt).join(', ')})`;
+      }
+      return callbackResult;
+    }
+
     return new NodeResult(
       callbackResult,
       this.array.reduce((prev, nr) => prev * nr.weight, 1.0) * weight,
