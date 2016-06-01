@@ -219,6 +219,7 @@ class ChartItem {
    * @returns {undefined}
    */
   _deepMark(nested) {
+    if (this._marked) return;
     if (nested <= 0) this._marked = true;
     this.history.forEach(h => {
       if (h.open) h.open._deepMark(nested - 1);
@@ -411,6 +412,18 @@ class Chart {
     this._add(newEdge);
   }
 
+  /**
+   * Create initial ChartItem(s).
+   * If *eidx* and *termMatch* are defined create also second chartItems with
+   * jump over the first one and the first (the first one should be moved to
+   * chart).
+   * @param {Number} idx sidx for initial edge
+   * @param {Rule} rule rule Edge rule
+   * @param {Number} eidx eidx for the second rule
+   * @param {String|NodeResult} termMatch termMatch for the second rule
+   * @returns {undefined}
+   */
+  // addInitial(idx, rule, eidx, termMatch) {
   addInitial(idx, rule, eidx, termMatch) {
     const open = new ChartItem({
       dot: 0,
@@ -420,17 +433,19 @@ class Chart {
     });
     this._add(open);
 
-    if (Number.isInteger(eidx) && (termMatch !== undefined)) {
-      // TODO: for speedup is necessary add previews rule to chart, not agenda.
-      this._add(new ChartItem({
-        dot: 1,
-        sidx: idx,
-        eidx,
-        rule,
-        open,
-        termMatch,
-      }));
-    }
+    // just make eslint happy:)
+    eidx + termMatch;  // eslint-disable-line
+    // if (Number.isInteger(eidx) && (termMatch !== undefined)) {
+    //   // TODO: for speedup is necessary add previews rule to chart, not agenda.
+    //   this._add(new ChartItem({
+    //     dot: 1,
+    //     sidx: idx,
+    //     eidx,
+    //     rule,
+    //     open,
+    //     termMatch,
+    //   }));
+    // }
   }
 
   getReduced(symbol, idx) {

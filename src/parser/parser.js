@@ -197,6 +197,7 @@ class Parser {
       rule => {
         rule.rhs[0].matchAll(
           this.input,
+          // TODO: needs to employ this.lexer for calculating eidx
           (match, sidx, eidx) => this.chart.addInitial(sidx, rule, eidx, match)
         );
       }
