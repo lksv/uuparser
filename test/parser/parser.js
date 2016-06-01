@@ -231,4 +231,9 @@ describe('Parser', () => {
       expect(subject.chart.addInitial).to.have.been.calledWith(4, ruleS2regExpTerm, 9, 'words');
     });
   });
+
+  describe('#results', () => {
+    it('should throw error when called before #parser method');
+    it('should call #semRes on all chart.parentEntities');
+  });
 });

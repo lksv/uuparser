@@ -132,7 +132,7 @@ class ChartItem {
       return [new NodeResultArgs([])];
     }
 
-    const indentLogger = this.logger ? this._logIndent.bind(
+    const indentLogger = logger ? this._logIndent.bind(
       this,
       logger,
       nested * 2

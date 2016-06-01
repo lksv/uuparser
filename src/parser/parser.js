@@ -14,6 +14,13 @@ class Parser {
     this.type = type;
     this.lexer = opts.lexer || Parser.defaultLexer;
     this.chart = new Chart(this.logger);
+
+    // prohibit V8 to create hidden object later
+    this.initedTime = null;
+    this.startTime = null;
+    this.chartDoneTime = null;
+    this.startResultsTime = null;
+    this.finishResultsTime = null;
   }
 
   /**
@@ -121,18 +128,61 @@ class Parser {
    */
   parse(input) {
     let currentChartItem;
+    this.startTime = new Date().getTime();
+
     // TODO: do not like when setting "object state" (e.i. input) here,
     // but, creating a new class to connect parser with a particular input
     // is quite over-whatever... :(
     this.input = input;
 
+
     if (this.type === 'bottomUp') this.initBottomUp();
     if (this.type === 'topDown') this.initTopDown();
+
+    this.initedTime = new Date().getTime();
+    this.logger.debug(`Init Agenda edges=${this.chart.hypothesis.length}`);
 
     // eslint-disable-next-line
     while (currentChartItem = this.chart.next()) {
       this.next(currentChartItem);
     }
+    this.chartDoneTime = new Date().getTime();
+    const chartTakesTime = this.chartDoneTime - this.initedTime;
+    this.logger.info(
+      `Finish Chart edges=${this.chart.hypothesis.length}, time ${chartTakesTime}`
+    );
+  }
+
+  results() {
+    this.startResultsTime = new Date().getTime();
+    if (!this.input) {
+      throw new Error('Input not set (you propably do not call #parse() method)');
+    }
+    const parsedEdges = this.chart.parentEntities();
+    this.logger.info(`Parent Entity Edges count: ${parsedEdges.length}`);
+    const results = parsedEdges.reduce(
+      (storage, edge) => storage.concat(edge.semRes(0, this.logger)),
+      []
+    );
+
+    this.finishResultsTime = new Date().getTime();
+    this.logger.info(
+      `Parser completed with ${results.length} results ` +
+      `(${this.chart.hypothesis.length} edges). ${this._timeConsumption()}`
+    );
+    this.logger.debug(`results representations: ${results.map(r => r.txt).join(',  ')}`);
+
+    return results;
+  }
+
+  _timeConsumption() {
+    const initTakeTime = this.initedTime - this.startTime;
+    const chartTakesTime = this.chartDoneTime - this.initedTime;
+    const parserTakesTime = this.chartDoneTime - this.startTime;
+    const resultsTakesTime = this.finishResultsTime - this.startResultsTime;
+    const overallTakesTime = parserTakesTime + resultsTakesTime;
+    return `Computed in ${overallTakesTime}ms` +
+     ` (Init: ${initTakeTime}ms | Chart: ${chartTakesTime}ms | results: ${resultsTakesTime}ms)`;
   }
 
   initTopDown() {
