@@ -7,7 +7,6 @@ const {
   Terminal,
   NonTerminal,
   // RegExpTerminal,
-  ChartItem,
 } = require('../..');
 
 /**
@@ -51,12 +50,6 @@ const grammar = new Grammar([
 
 const parser = new Parser(grammar, 'topDown');
 parser.logger.level = 0; // DEBUG
-parser.chart._add(new ChartItem({
-  sidx: 0,
-  eidx: 0,
-  dot: 0,
-  rule: ruleS,
-}));
 parser.parse('Hello my WORLD! I am Lukáš');
 
 const parsedEdges = parser.chart.parentEntities();

@@ -1,4 +1,10 @@
-const expect = require('chai').expect;
+/* eslint-disable no-unused-expressions */
+
+const chai = require('chai');
+const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
+chai.use(sinonChai);
+const expect = chai.expect;
 
 const parser = require('../..');
 const GrmSymbol = parser.GrmSymbol;
@@ -38,6 +44,24 @@ describe('Terminal', () => {
       expect(subject.match('xxx terminal here', 4)).to.eql([['terminal'], 12]);
     });
   });
+
+  describe('#matchAll', () => {
+    it('do not call callback when no occurences', () => {
+      const callback = sinon.spy();
+      subject.matchAll('bla bla bla', callback);
+      expect(callback).to.have.not.been.called;
+    });
+
+    it('calls calback for each occurence', () => {
+      const s = new Terminal('aba');
+      const callback = sinon.spy();
+      s.matchAll('ababa  aba', callback);
+      expect(callback).to.have.been.calledThrice;
+      expect(callback).to.have.been.calledWith('aba', 0, 3);
+      expect(callback).to.have.been.calledWith('aba', 2, 5);
+      expect(callback).to.have.been.calledWith('aba', 7, 10);
+    });
+  });
 });
 
 describe('RegExpTerminal', () => {
@@ -59,6 +83,25 @@ describe('RegExpTerminal', () => {
   describe('#match', () => {
     it('should match exact match with input', () => {
       expect(subject.match('xxx 123 here', 4)).to.eql([['123'], 7]);
+    });
+  });
+
+  describe('#matchAll', () => {
+    it('do not call callback when no occurences', () => {
+      const callback = sinon.spy();
+      subject.matchAll('bla bla bla', callback);
+      expect(callback).to.have.not.been.called;
+    });
+
+    it('calls calback for each occurence', () => {
+      const s = new RegExpTerminal(/[^ ]+/);
+      const callback = sinon.spy();
+      s.matchAll('abcd123xyz  aba', callback);
+      expect(callback).to.have.callCount(4);
+      expect(callback).to.have.been.calledWith('abcd123xyz', 0, 10);
+      expect(callback).to.have.been.calledWith('123xyz', 4, 10);
+      expect(callback).to.have.been.calledWith('xyz', 7, 10);
+      expect(callback).to.have.been.calledWith('aba', 12, 15);
     });
   });
 });

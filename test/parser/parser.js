@@ -18,9 +18,19 @@ const {
 
 const epsilonRule = new Rule(new NonTerminal('E'), []);
 const ruleE2term = new Rule(new NonTerminal('E'), [new Terminal('term')]);
-const ruleA2E = new Rule(new NonTerminal('A'), [new NonTerminal('E')]);
+const ruleA2E = new Rule(
+  new NonTerminal('A'),
+  [new NonTerminal('E')],
+  undefined,
+  { entity: true }
+);
 const ruleS2termE = new Rule(new NonTerminal('A'), [new Terminal('term'), new NonTerminal('E')]);
-const ruleS2regExpTerm = new Rule(new NonTerminal('A'), [new RegExpTerminal('\\w+')]);
+const ruleS2regExpTerm = new Rule(
+  new NonTerminal('A'),
+  [new RegExpTerminal('\\w+')],
+  undefined,
+  { entity: true }
+);
 
 const grammar = new Grammar([
   epsilonRule,
@@ -196,6 +206,29 @@ describe('Parser', () => {
       expect(newEdge.dot).to.equal(1);
       expect(newEdge.eidx).to.equal(9 + 3);
       expect(newEdge.history[0].termMatch).to.eql(['term']);
+    });
+  });
+
+  describe('#initTopDown', () => {
+    it('should call chart.addInitial(0, rule) for each entity rule', () => {
+      const subject = new Parser(grammar, 'bottomUp');
+      sinon.spy(subject.chart, 'addInitial');
+      subject.initTopDown();
+      expect(subject.chart.addInitial).to.have.been.calledTwice;
+      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleA2E);
+      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleS2regExpTerm);
+    });
+  });
+
+  describe('#initBottomUp', () => {
+    it('shold call chart.addInitial() for each found terminal match', () => {
+      const subject = new Parser(grammar, 'bottomUp');
+      subject.input = 'two words';
+      sinon.spy(subject.chart, 'addInitial');
+      subject.initBottomUp();
+      expect(subject.chart.addInitial).to.have.been.calledTwice;
+      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleS2regExpTerm, 3, 'two');
+      expect(subject.chart.addInitial).to.have.been.calledWith(4, ruleS2regExpTerm, 9, 'words');
     });
   });
 });

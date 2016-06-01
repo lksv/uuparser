@@ -411,7 +411,6 @@ class Chart {
     this._add(newEdge);
   }
 
-  // TODO: test missing
   addInitial(idx, rule, eidx, termMatch) {
     const open = new ChartItem({
       dot: 0,
@@ -422,6 +421,7 @@ class Chart {
     this._add(open);
 
     if (Number.isInteger(eidx) && (termMatch !== undefined)) {
+      // TODO: for speedup is necessary add previews rule to chart, not agenda.
       this._add(new ChartItem({
         dot: 1,
         sidx: idx,

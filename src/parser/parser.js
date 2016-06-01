@@ -121,7 +121,7 @@ class Parser {
    */
   parse(input) {
     let currentChartItem;
-    // TODO: do not like when setting "state" (e.i. input) here,
+    // TODO: do not like when setting "object state" (e.i. input) here,
     // but, creating a new class to connect parser with a particular input
     // is quite over-whatever... :(
     this.input = input;
@@ -142,12 +142,12 @@ class Parser {
   }
 
   initBottomUp() {
+    // TODO: for speedup, add only rules which are derivated from entiti rules
     this.grammar.terminalStartRules().forEach(
-      // TODO(?): for speedup is added both edge now
-      // on the other hand code will be less maintainable
       rule => {
-        rule.matchAll(
-          ([match, sidx, eidx]) => this.chart.addInitial(sidx, rule, eidx, match)
+        rule.rhs[0].matchAll(
+          this.input,
+          (match, sidx, eidx) => this.chart.addInitial(sidx, rule, eidx, match)
         );
       }
     );
