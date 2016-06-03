@@ -45,12 +45,24 @@ class Grammar {
   /**
    * Returns list of rules which RHS starts on *symbol*
    *
-   * @param {GrmSymbol|undefined} symbol It can be undefined when it empty rule.
+   * @param {GrmSymbol|undefined} symbol It can be undefined when it is empty rule.
    * @returns {Array} Array of Rules
    */
   rulesByLhs(symbol) {
     return this.lhsRules.get(symbol.code) || [];
   }
+
+  /**
+   * Returns only epsilon rules (rules with empty RHS)
+   * @param {GrmSymbol} symbol
+   * @returns {Array} Array of Rules
+   */
+  epsilonRulesByLhs(symbol) {
+    // TODO should be speed up by your own index
+    const res = this.lhsRules.get(symbol.code) || [];
+    return res.filter(rule => rule.isEmpty());
+  }
+
 
   entityRules() {
     return this.rules.filter(rule => rule.entity);
@@ -60,6 +72,10 @@ class Grammar {
     return this.rules.filter(
       rule => rule.rhs[0] && (rule.rhs[0] instanceof Terminal)
     );
+  }
+
+  toString() {
+    return this.rules.map(r => r.toString()).join("\n");
   }
 }
 

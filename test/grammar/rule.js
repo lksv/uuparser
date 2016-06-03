@@ -35,7 +35,7 @@ describe('Rule', () => {
 
     it('when semRes is defined', () => {
       expect(new Rule(lhs, [], () => 1).toString()).to
-        .equal('A ->  {{ () => 1 }}');
+        .equal('A ->  {% () => 1 %}');
     });
 
     it('when options is defined', () => {
@@ -51,7 +51,7 @@ describe('Rule', () => {
         new Rule(lhs, [lhs, term, regExpTerm], () => 123, { weight: 0.1 });
 
       expect(subject.toString()).to
-        .equal('A -> A "abc" /def/y {{ () => 123 }} {"weight":0.1}');
+        .equal('A -> A "abc" /def/y {% () => 123 %} {"weight":0.1}');
     });
   });
 });

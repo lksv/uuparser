@@ -20,19 +20,19 @@ const {
  Bn -> 'x'
 */
 
-const ruleCount = 6;
+const ruleCount = 5;
 
 
 const rules = [];
 rules.push(new Rule(
   new NonTerminal('S'),
-  [new NonTerminal(`A`), new NonTerminal('A'), new NonTerminal('A')],
+  [new NonTerminal('A'), new NonTerminal('A'), new NonTerminal('A')],
   (_, x, y, z) => x + y + z,
   { entity: true }
 ));
 for (let i = 1; i <= ruleCount; i++) {
   rules.push(new Rule(
-    new NonTerminal(`A`), [new NonTerminal(`A${i}`)], () => 1
+    new NonTerminal('A'), [new NonTerminal(`A${i}`)], () => 1
   ));
 
   rules.push(new Rule(
@@ -51,7 +51,7 @@ for (let i = 1; i <= ruleCount; i++) {
 
 const grammar = new Grammar(rules);
 
-describe('Simple grammar', () => {
+describe('Big Ambiguity Test', () => {
   context('TopDown', () => {
     it('parse grammar and return semRes results', () => {
       const parser = new Parser(grammar, 'topDown');

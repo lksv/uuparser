@@ -143,7 +143,7 @@ class ChartItem {
     this.history.forEach(h => {
       const openSemRes = h.open.semRes(nested + 1, logger);
       const closedSemRes = h.termMatch
-        ? [new NodeResult(h.termMatch, 1.0, `"${h.termMatch}"`)]
+        ? h.termMatch.map(tm => new NodeResult(tm, 1.0, `"${tm}"`))
         : h.closed.semRes(nested + 1, logger);
       indentLogger(() => `OpenSemRes: ${this._nrsToString(openSemRes)}`);
       indentLogger(() => `ClosedSemRes: ${this._nrasToString(closedSemRes)}`);

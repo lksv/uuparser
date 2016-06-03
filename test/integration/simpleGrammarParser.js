@@ -66,7 +66,7 @@ describe('Simple grammar', () => {
     });
   });
 
-  context('bottonUp', () => {
+  context('bottomUp', () => {
     it('parse grammar and return semRes results', () => {
       const parser = new Parser(grammar, 'bottomUp');
       parser.logger.level = 1;

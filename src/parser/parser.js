@@ -72,6 +72,11 @@ class Parser {
       this.grammar.rulesByLhs(open.nextSymbol()).forEach(rule => {
         this.chart.addPredicted(rule, open.eidx);
       });
+    } else {
+      // needs to add all epsilon rules
+      this.grammar.epsilonRulesByLhs(open.nextSymbol()).forEach(rule => {
+        this.chart.addPredicted(rule, open.eidx);
+      });
     }
 
     // go throuh reduced items and crete a new chartItems

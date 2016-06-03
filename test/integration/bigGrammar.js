@@ -53,7 +53,7 @@ rules.push(new Rule(
 
 const grammar = new Grammar(rules);
 
-describe('Simple grammar', () => {
+describe('Big nested grammar', () => {
   context('TopDown', () => {
     it('parse grammar and return semRes results', () => {
       const parser = new Parser(grammar, 'topDown');

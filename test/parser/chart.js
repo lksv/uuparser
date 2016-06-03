@@ -210,7 +210,7 @@ describe('ChartItem', () => {
     it('shuld use history `termMatch` for terminal symbol (A->"x".)', () => {
       const ruleX = new Rule(lhs, [new Terminal('x')], (_, x) => x);
       const open = new ChartItem({ rule: ruleX, dot: 0, sidx: 0, eidx: 0 });
-      subject = new ChartItem({ rule: ruleX, dot: 1, sidx: 0, eidx: 1, open, termMatch: 'x' });
+      subject = new ChartItem({ rule: ruleX, dot: 1, sidx: 0, eidx: 1, open, termMatch: ['x'] });
       expect(subject.semRes()).to.eql([
         new NodeResult('x', 1.0, 'A("x")'),
       ]);
