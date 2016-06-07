@@ -73,7 +73,10 @@ class Parser {
         this.chart.addPredicted(rule, open.eidx);
       });
     } else {
-      // needs to add all epsilon rules
+      // Needs to add all epsilon rules from eidx to the agenda
+      //
+      // For each edge as B → γ• <closedSidx, closedEidx>
+      // put edges  B -> . <open.edix, open.eidx> to the agenda
       this.grammar.epsilonRulesByLhs(open.nextSymbol()).forEach(rule => {
         this.chart.addPredicted(rule, open.eidx);
       });

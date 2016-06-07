@@ -79,8 +79,8 @@ class NodeResultArgs {
    */
   apply(callback, weight, lhsName) {
     const callbackArgs = [[this.array, weight, lhsName]].concat(this.array.map(d => d.data));
-    callback = callback || NodeResultArgs.defaultCallback;
-    const callbackResult = callback.apply(undefined, callbackArgs);
+    const applyFunction = callback || NodeResultArgs.defaultCallback;
+    const callbackResult = applyFunction.apply(undefined, callbackArgs);
     // when callback already returns NodeResult instance, use it directly
     if (callbackResult instanceof NodeResult) {
       if (callbackResult.weight === undefined) {
@@ -103,12 +103,14 @@ class NodeResultArgs {
     return `NodeResultArgs(${this.array.map(nr => nr.toString()).join(', ')})`;
   }
 
-  static defaultCallback([args, weight, lhsName]) {
+  // eslint-disable-next-line no-unused-vars
+  static defaultCallback([args, _weight, lhsName]) {
     if (args.length === 1) {
-      return args[0].data
-    } else {
-      return `Undefined callback for LHS: ${lhsName}`;
+      // define default semRes function when if rule has only one symbol on the RHS
+      // Just use that symbol data.
+      return args[0].data;
     }
+    return `Undefined callback for LHS: ${lhsName}`;
   }
 }
 

@@ -24,8 +24,11 @@ const ruleA2E = new Rule(
   undefined,
   { entity: true }
 );
-const ruleS2termE = new Rule(new NonTerminal('A'), [new Terminal('term'), new NonTerminal('E')]);
-const ruleS2regExpTerm = new Rule(
+const ruleA2X = new Rule(new NonTerminal('A'), [new NonTerminal('X')]);
+const ruleX2X = new Rule(new NonTerminal('X'), [new NonTerminal('X')]);
+
+const ruleA2termE = new Rule(new NonTerminal('A'), [new Terminal('term'), new NonTerminal('E')]);
+const ruleA2regExpTerm = new Rule(
   new NonTerminal('A'),
   [new RegExpTerminal('\\w+')],
   undefined,
@@ -36,8 +39,10 @@ const grammar = new Grammar([
   epsilonRule,
   ruleE2term,
   ruleA2E,
-  ruleS2termE,
-  ruleS2regExpTerm,
+  ruleA2termE,
+  ruleA2regExpTerm,
+  ruleA2X,
+  ruleX2X,
 ]);
 
 describe('Parser', () => {
@@ -77,7 +82,7 @@ describe('Parser', () => {
     it('should call addFromOpenClosed for every waiting edges', () => {
       // add two waiting edges
       const open1 = new ChartItem({ rule: ruleA2E, sidx: 5, eidx: 5, dot: 0 });
-      const open2 = new ChartItem({ rule: ruleS2termE, sidx: 0, eidx: 5, dot: 1 });
+      const open2 = new ChartItem({ rule: ruleA2termE, sidx: 0, eidx: 5, dot: 1 });
       subject.chart._add(open1);
       subject.chart._add(open2);
 
@@ -120,14 +125,17 @@ describe('Parser', () => {
       subject = new Parser(grammar, 'bottomUp');
     });
 
-    const open = new ChartItem({ rule: ruleS2termE, sidx: 0, eidx: 5, dot: 1 });
+    const open = new ChartItem({ rule: ruleA2termE, sidx: 0, eidx: 5, dot: 1 });
 
     const closed1 = new ChartItem({ rule: epsilonRule, sidx: 5, eidx: 5 });
     const closed2 = new ChartItem({ rule: ruleE2term, sidx: 5, eidx: 8, dot: 1 });
 
     it('should not add any edge when no reduced edges exists', () => {
       sinon.spy(subject.chart, 'addFromOpenClosed');
-      subject.predictor(open);
+      // there is exception for bottomUp parser and epsilon rules
+      // therefore it cannot be used const *open* in this test
+      const openWithoutEmpty = new ChartItem({ rule: ruleA2X, sidx: 0, eidx: 0 });
+      subject.predictor(openWithoutEmpty);
       expect(subject.chart.addFromOpenClosed).to.have.not.been.called;
     });
 
@@ -163,7 +171,15 @@ describe('Parser', () => {
       it('should not create new predicted hypothesis', () => {
         sinon.spy(subject.chart, 'addPredicted');
         subject.predictor(open);
-        expect(subject.chart.addPredicted).to.have.not.been.called;
+        expect(subject.chart.addPredicted).to.have.not.been.calledWith(ruleE2term, 5);
+        expect(subject.chart.addPredicted).to.have.been.calledOnce;
+      });
+
+      it('should create predicted hypothesis for epsilon rules', () => {
+        sinon.spy(subject.chart, 'addPredicted');
+        subject.predictor(open);
+        expect(subject.chart.addPredicted).to.have.been.calledWith(epsilonRule, 5);
+        expect(subject.chart.addPredicted).to.have.been.calledOnce;
       });
     });
   });
@@ -184,7 +200,7 @@ describe('Parser', () => {
     });
 
     it('match the RegExpTerminal when input equal', () => {
-      const openRegExpTerm = new ChartItem({ rule: ruleS2regExpTerm, sidx: 2, eidx: 2, dot: 0 });
+      const openRegExpTerm = new ChartItem({ rule: ruleA2regExpTerm, sidx: 2, eidx: 2, dot: 0 });
       const subject = new Parser(grammar, 'bottomUp');
       subject.input = '--word--';
       subject.scanner(openRegExpTerm);
@@ -216,7 +232,7 @@ describe('Parser', () => {
       subject.initTopDown();
       expect(subject.chart.addInitial).to.have.been.calledTwice;
       expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleA2E);
-      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleS2regExpTerm);
+      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleA2regExpTerm);
     });
   });
 
@@ -227,8 +243,8 @@ describe('Parser', () => {
       sinon.spy(subject.chart, 'addInitial');
       subject.initBottomUp();
       expect(subject.chart.addInitial).to.have.been.calledTwice;
-      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleS2regExpTerm, 3, 'two');
-      expect(subject.chart.addInitial).to.have.been.calledWith(4, ruleS2regExpTerm, 9, 'words');
+      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleA2regExpTerm, 3, 'two');
+      expect(subject.chart.addInitial).to.have.been.calledWith(4, ruleA2regExpTerm, 9, 'words');
     });
   });
 

@@ -42,10 +42,11 @@ class Rule {
 
   /**
    * Returns wheather the rule is empty i.e. does not have any symbols on RHS
-   * @returns true if the rule is empty
+   *
+   * @returns {Boolean} true if the rule is empty
    */
   isEmpty() {
-    return (this.rhs.length === 0)
+    return (this.rhs.length === 0);
   }
 
   toString() {

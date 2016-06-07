@@ -54,7 +54,8 @@ class Grammar {
 
   /**
    * Returns only epsilon rules (rules with empty RHS)
-   * @param {GrmSymbol} symbol
+   *
+   * @param {GrmSymbol} symbol LHS symbol of the rule
    * @returns {Array} Array of Rules
    */
   epsilonRulesByLhs(symbol) {
@@ -75,7 +76,7 @@ class Grammar {
   }
 
   toString() {
-    return this.rules.map(r => r.toString()).join("\n");
+    return this.rules.map(r => r.toString()).join('\n');
   }
 }
 
