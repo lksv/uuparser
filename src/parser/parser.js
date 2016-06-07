@@ -161,13 +161,26 @@ class Parser {
     );
   }
 
-  results() {
+  /**
+   * Return semantic representation (or AST) of parserd input.
+   * Should be used after #parse() method
+   *
+   * @param {Boolean} full=true returns only fully parsed results when true
+   * @returns {Array} array of NodeResult
+   */
+  results(full = true) {
     this.startResultsTime = new Date().getTime();
     if (!this.input) {
       throw new Error('Input not set (you propably do not call #parse() method)');
     }
-    const parsedEdges = this.chart.parentEntities();
+    let parsedEdges = this.chart.parentEntities();
     this.logger.info(`Parent Entity Edges count: ${parsedEdges.length}`);
+    if (full) {
+      parsedEdges = parsedEdges.filter(
+        edge => (edge.sidx === 0 && edge.eidx === this.input.length)
+      );
+      this.logger.info(`Parent Full Edges count: ${parsedEdges.length}`);
+    }
     const results = parsedEdges.reduce(
       (storage, edge) => storage.concat(edge.semRes(0, this.logger)),
       []
