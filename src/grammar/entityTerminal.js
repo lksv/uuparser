@@ -4,8 +4,28 @@ const { GrmSymbol, RegExpTerminal } = require('./symbol');
 
 const EntityHelper = require('../utils/entityHelper');
 
+/**
+ * Class for easy matching of long list of entities
+ * i.e. First names, Last names Cities, Streets, etc.
+ *
+ * This class converts entities to trie structure and use regural expression
+ * to match the entites. It is blasing fast!
+ *
+ * Example:
+ *     EntityTerminal.registerEntity('entityName', longListOfEntities);
+ *     const subject = new EntityTerminal('entityName');
+ *     subject.match('input string', 0)
+ *
+ */
+
 class EntityTerminal extends RegExpTerminal {
 
+  /**
+   * Creates an EntityTerminal. The entity *name* must be registered
+   * before creating an instace of EntityTerminal.
+   *
+   * @param {string} name Registerd *name* of entity
+   */
   constructor(name) {
     const entity = EntityTerminal.entityStorage.get(name);
     if (!entity) {
@@ -18,6 +38,12 @@ class EntityTerminal extends RegExpTerminal {
     return `EntityTerminal(${this.name})`;
   }
 
+  /**
+   * Register entity name in global storage.
+   * @param {string} name Name of entity
+   * @param {array} list array of entities e.g. array of strings to match
+   * @returns {undefined}
+   */
   static registerEntity(name, list) {
     const regExp = EntityHelper.entities2regexp(list);
     EntityTerminal.entityStorage.set(name, { list, regExp });
