@@ -24,7 +24,7 @@ class EntityHelper {
    * Returns regular expression (to be recise string which shlould construct regular
    * expression) which match all entered entites.
    *
-   * It creates trie structure form entities. Usually it compact long lists of
+   * It creates trie structure form entities. Usually it compact size of long list of
    * entities to a quarter and makes regular expression super fast.
    *
    * Example
