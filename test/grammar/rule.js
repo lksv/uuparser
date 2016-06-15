@@ -54,4 +54,70 @@ describe('Rule', () => {
         .equal('A -> A "abc" /def/y {% () => 123 %} {"weight":0.1}');
     });
   });
+
+  describe('._loadRule', () => {
+    it('correctly parse empty rule', () => {
+      expect(Rule._loadRule(lhs, ' ')).to.eql(new Rule(lhs, []));
+    });
+    it('correctly parse rule with several RHS symbols', () => {
+      expect(Rule._loadRule(lhs, ' A "word" /regexp/ ')).to.eql(
+        new Rule(
+          lhs, [
+            new NonTerminal('A'),
+            new Terminal('word'),
+            new RegExpTerminal('regexp'),
+          ]
+        ));
+    });
+    it('correctly parse rule with weight', () => {
+      expect(Rule._loadRule(lhs, ' weight: 1.1')).to.eql(
+        new Rule(lhs, [], undefined, { weight: 1.1 })
+      );
+    });
+    it('correctly parse rule with entity', () => {
+      expect(Rule._loadRule(lhs, ' entity: true')).to.eql(
+        new Rule(lhs, [], undefined, { entity: true })
+      );
+    });
+    it('correctly parse rule with proc', () => {
+      expect(Rule._loadRule(lhs, ' {% \n () => 2 %}').toString()).to.eql(
+        new Rule(lhs, [], eval(' \n () => 2'), {}).toString() // eslint-disable-line no-eval
+      );
+    });
+    it('correctly parse rule with serveral RHS, weight, entity and proc', () => {
+      expect(Rule._loadRule(lhs, ' A "word" /regexp/ entity: true {% 2 %} weight: 0.5')).to.eql(
+        new Rule(
+          lhs,
+          [
+            new NonTerminal('A'),
+            new Terminal('word'),
+            new RegExpTerminal('regexp'),
+          ],
+          eval('2'), // eslint-disable-line no-eval
+          { entity: true, weight: 0.5 }
+        ));
+    });
+  });
+
+  describe('.loadFromString', () => {
+    it('correctly parse empty rule', () => {
+      expect(Rule.loadFromString('A ->')).to.eql([new Rule(new NonTerminal('A'), [])]);
+    });
+    it('correctly parse non-empty rule', () => {
+      expect(Rule.loadFromString('A -> A weight: 0.01')).to.eql([
+        new Rule(new NonTerminal('A'), [new NonTerminal('A')], undefined, { weight: 0.01 }),
+      ]);
+    });
+
+    it('correctly parse rules connected by ||', () => {
+      const result = Rule.loadFromString('A -> || {% () => 1 %} ||\n A weight: 0.01');
+      expect(result[0].toString()).to.eql(new Rule(lhs, []).toString());
+      expect(result[1].toString()).to.eql(
+        new Rule(lhs, [], eval('() => 1 ')).toString() // eslint-disable-line no-eval
+      );
+      expect(result[2].toString()).to.eql(
+        new Rule(lhs, [new NonTerminal('A')], undefined, { weight: 0.01 }).toString()
+      );
+    });
+  });
 });

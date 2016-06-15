@@ -12,10 +12,43 @@ class GrmSymbol {
    */
   constructor(name) {
     this.name = name;
-
     this.code = this.name;
   }
+
+  /**
+   * Convert string to symbol
+   *
+   * example:
+   *      GrmSymbol.fromString('"terminal"') // => new Terminal('terminal')
+   *      GrmSymbol.fromString('A') // => new NonTerminal('A')
+   *      GrmSymbol.fromString('/A/') // => new RegExpTerminal(/A/)
+   *
+   * @param {string} symbolStr String to convert to GrmSymbol
+   * @returns {GrmSymbol} returns resulting symbol
+   */
+  static fromString(symbolStr) {
+    for (const rule of GrmSymbol.str2symbolRules) {
+      let found;
+      if ((found = rule.pattern.exec(symbolStr)) !== null) { //eslint-disable-line
+        return rule.action(found);
+      }
+    }
+    throw new Error('Cannot convert string to GrmSymbol: ' + symbolStr);
+  }
+
+  /**
+   * Used to register new symbols. It is then accessable by
+   * GrmSymbol.fromString static method.
+   *
+   * @param {RegExp} pattern Patten to match the symbol
+   * @param {Function} action Function that takes (regexp.exec result) and construct new symbol
+   * @returns {undefined}
+   */
+  static registerGrammarSymbol(pattern, action) {
+    GrmSymbol.str2symbolRules.push({ pattern, action });
+  }
 }
+GrmSymbol.str2symbolRules = [];
 
 /**
  * Represents NonTerminal of grammar
@@ -26,6 +59,7 @@ class NonTerminal extends GrmSymbol {
     return this.name;
   }
 }
+GrmSymbol.registerGrammarSymbol(/^([A-Z][A-Za-z_0-9]*)$/, (match) => new NonTerminal(match[1]));
 
 /**
  * Represents Terminal symbol of grammar
@@ -81,6 +115,7 @@ class Terminal extends GrmSymbol {
     return `"${this.name}"`;
   }
 }
+GrmSymbol.registerGrammarSymbol(/^"(.*)"$/, (match) => new Terminal(match[1]));
 
 // see http://www.unicode.org/reports/tr44/#Cased
 //
@@ -175,8 +210,8 @@ class RegExpTerminal extends Terminal {
         : regExpWithoutY.lastIndex;
     }
   }
-
 }
+GrmSymbol.registerGrammarSymbol(/^\/(.*)\/$/, (match) => new RegExpTerminal(match[1]));
 
 // export {NonTerminal, Terminal, RegExpTerminal}
 exports = module.exports = {

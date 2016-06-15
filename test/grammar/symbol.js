@@ -21,6 +21,32 @@ describe('GrmSymbol', () => {
     const subject = new GrmSymbol('customName');
     expect(subject.name).to.equal('customName');
   });
+
+  describe('.fromString', () => {
+    it('raises an error on unrecognized string', () => {
+      const condition = () => GrmSymbol.fromString('! no valid Str!n6');
+      expect(condition).to.throw(/Cannot convert/);
+    });
+
+    it('parse NonTerminal symbol', () => {
+      expect(GrmSymbol.fromString('ABC_N1')).to.eql(new NonTerminal('ABC_N1'));
+    });
+
+    it('parse Terminal symbol', () => {
+      expect(GrmSymbol.fromString('"some string!@#"')).to
+        .eql(new Terminal('some string!@#'));
+    });
+
+    it('parse RegExpTerminal symbol', () => {
+      expect(GrmSymbol.fromString('/regexp/')).to
+        .eql(new RegExpTerminal('regexp'));
+    });
+
+    it('parse custom registerd symbol', () => {
+      GrmSymbol.registerGrammarSymbol(/^abc$/, () => new GrmSymbol('XXX'));
+      expect(GrmSymbol.fromString('abc')).to.eql(new GrmSymbol('XXX'));
+    });
+  });
 });
 
 describe('NonTerminal', () => {

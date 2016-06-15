@@ -1,4 +1,5 @@
 const Terminal = require('./symbol').Terminal;
+const Rule = require('./rule');
 
 class Grammar {
   /**
@@ -77,6 +78,22 @@ class Grammar {
 
   toString() {
     return this.rules.map(r => r.toString()).join('\n');
+  }
+
+  /**
+   * Loads rules from *grammar* string.
+   *
+   * Be carefull, this function is not safe, it uses "eval" to prepare semantic results!
+   *
+   * @param {String} grammarStr Grammar string e.g. 'A -> A "b" {% console.log(1) %} '
+   * @returns {this} returns self
+   */
+  loadFromString(grammarStr) {
+    grammarStr.split(/\s*\r?\n\s*\r?\n(?:\s*\r?\n)*/).forEach(ruleStr => {
+      const rules = Rule.loadFromString(ruleStr);
+      rules.forEach(rule => this.addRule(rule));
+    });
+    return this;
   }
 }
 

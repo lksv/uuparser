@@ -68,7 +68,7 @@ describe('Big nested grammar', () => {
     });
   });
 
-  context('bottonUp', () => {
+  context('bottomUp', () => {
     it('parse grammar and return semRes results', () => {
       const parser = new Parser(grammar, 'bottomUp');
       parser.logger.level = 1;
@@ -78,7 +78,7 @@ describe('Big nested grammar', () => {
 
       expect(results.length).to.equal(1);
       expect(results[0].data).to.equal(ruleCount * 2);
-      // console.log('bottonUp ------');
+      // console.log('bottomUp ------');
       // parser.chart.hypothesis.forEach(e => console.log(e.toString()));
     });
   });
