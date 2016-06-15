@@ -1,29 +1,36 @@
-RULE -> LHS "->" RHS_VARIANTS             ${ (_, lhs, _a, rest) => (rest.map(({symbols, proc, options}) => ({ lhs, symbols, proc, options }))) }$ entity: true
+RULE -> LHS "->" RHS_VARIANTS            entity: true  {%
+  (_, lhs, _a, rest) => {
+    return rest.map(
+      ({symbols, proc, options}) => new Rule(lhs, symbols, proc, options)
+    );
+  }
+%}
 
-LHS -> NONTERMINAL                        ${ (_, lhs) => lhs }$
+LHS -> NONTERMINAL                        {% (_, lhs) => lhs %}
 
-RHS_VARIANTS -> RHS                       ${ (_, rhs) => [rhs] }$
-RHS_VARIANTS -> RHS "|" RHS_VARIANTS      ${ (_, rhs, _a, other) => [rhs].concat(other) }$
+RHS_VARIANTS -> RHS                       {% (_, rhs) => [rhs] %}
+RHS_VARIANTS -> RHS "||" RHS_VARIANTS      {% (_, rhs, _a, other) => [rhs].concat(other) %}
 
-RHS -> SYMBOLS PROC RHS_PARAMS            ${ (_, symbols, proc, options) => ({symbols, options, proc, }) }$
+# RHS -> SYMBOLS PROC RHS_PARAMS            {% (_, symbols, proc, options) => ({symbols, options, proc, }) %}
+RHS -> SYMBOLS RHS_PARAMS PROC            {% (_, symbols, options, proc) => ({symbols, options, proc, }) %}
 
-PARAM -> /entity:\s+true/                 ${ { entity: true } }$
-PARAM -> /weight:\s+\d+(?:\.\d+)?/        ${ (_, t) => ({ weight: /(\d+(?:\.\d+))/.exec(t)[1] }) }$
+PARAM -> /entity:\s+true/                 {% { entity: true } %}
+PARAM -> /weight:\s+\d+(?:\.\d+)?/        {% (_, t) => ({ weight: /(\d+(?:\.\d+))/.exec(t)[1] }) %}
 
-RHS_PARAMS ->                             ${ () => ({}) }$
-RHS_PARAMS -> PARAM                       ${ (_, p) => p }$
-RHS_PARAMS -> PARAM "," PARAM             ${ (_, p1, p2) => Object.assign({}, p1, p2) }$
-RHS_PARAMS -> PARAM "," PARAM "," PARAM   ${ (_, p1, p2, p3) => Object.assign({}, p1, p2, p3) }$
+RHS_PARAMS ->                             {% () => ({}) %}
+RHS_PARAMS -> PARAM                       {% (_, p) => p %}
+RHS_PARAMS -> PARAM "," PARAM             {% (_, p1, p2) => Object.assign({}, p1, p2) %}
+RHS_PARAMS -> PARAM "," PARAM "," PARAM   {% (_, p1, p2, p3) => Object.assign({}, p1, p2, p3) %}
 
 
-PROC ->                                   ${ () => null }$
-PROC -> "${" /.*?(?=\}\$)/ "}$"           ${ (_, _a, proc, _b) => proc }$
+PROC ->                                   {% () => null %}
+PROC -> "{%" /.*?(?=%\})/ "%}"            {% (_, _a, proc, _b) => eval(proc) %}
 
-SYMBOLS ->                                ${ () => [] }$
-SYMBOLS -> SYMBOL SYMBOLS                 ${ (_, s, arr) => arr.concat([s]) }$
+SYMBOLS ->                                {% () => [] %}
+SYMBOLS -> SYMBOL SYMBOLS                 {% (_, s, arr) => [s].concat(arr) %}
 
-SYMBOL -> /"(?:[^\\"]|\\.)+"/             ${ (_, s) => s }$
-SYMBOL -> /\/(?:[^\\\/]|\\.)+\//          ${ (_, s) => s }$
-SYMBOL -> NONTERMINAL                     ${ (_, s) => s }$
+SYMBOL -> /"(?:[^\\"]|\\.)+"/             {% (_, s) => new Terminal(s) %}
+SYMBOL -> /\/(?:[^\\\/]|\\.)+\//          {% (_, s) => new RegExpTerminal(s) %}
+SYMBOL -> NONTERMINAL                     {% (_, s) => s %}
 
-NONTERMINAL -> /[A-Z][A-Z0-9_]*/          ${ (_, s) => s }$
+NONTERMINAL -> /[A-Z][A-Z0-9_]*/          {% (_, s) => new NonTerminal(s) %}
