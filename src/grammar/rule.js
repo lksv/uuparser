@@ -94,7 +94,9 @@ class Rule {
       rhs = rhs.replace(weightRegExp, '');
     }
 
-    rhs = rhs.match(/"(?:\\.|[^"\\])*"|[A-Za-z0-9_]+|\{%[\w\W]*%\}|\S+/g) || [];
+    rhs = rhs.match(
+      /"(?:\\.|[^"\\])*"|[A-Za-z0-9_]+(?:\([A-Za-z0-9_]+\))?|\{%[\w\W]*%\}|\S+/g
+    ) || [];
 
     const convertedRHSSymbols = rhs
       .filter(s => !!(s.trim())) // filter empty strings

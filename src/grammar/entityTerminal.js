@@ -8,6 +8,10 @@ const EntityHelper = require('../utils/entityHelper');
  * Class for easy matching of long list of entities
  * i.e. First names, Last names Cities, Streets, etc.
  *
+ * Entities could contain "special characters" which are converted to regexp
+ * differently (e.g. space is converted as \s{1,4}). See EntityHelper for more info.
+ *
+ *
  * This class converts entities to trie structure and use regural expression
  * to match the entites. It is blasing fast!
  *

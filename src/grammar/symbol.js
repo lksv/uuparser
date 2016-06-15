@@ -45,7 +45,7 @@ class GrmSymbol {
    * @returns {undefined}
    */
   static registerGrammarSymbol(pattern, action) {
-    GrmSymbol.str2symbolRules.push({ pattern, action });
+    GrmSymbol.str2symbolRules.unshift({ pattern, action });
   }
 }
 GrmSymbol.str2symbolRules = [];
