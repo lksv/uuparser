@@ -388,15 +388,15 @@ class Chart {
         (oa = open.rule.left_assoc) &&
         (ca = closed.rule.left_assoc) &&
         ([...oa].filter(x => ca.has(x)).length > 0)) {
-      this.logger.debug(`  addFromOpenClosed canceling by left_assoc: ${oa} & ${ca}`);
+      this.logger.debug(`  addFromOpenClosed canceling by left_assoc: ${[...oa]} & ${[...ca]}`);
       return;
     }
     // right association check
-    if (!open.isReducedItem() &&
+    if ((open.dot < open.rule.rhs.length - 1) && // isn't on the last symbol
         (oa = open.rule.right_assoc) &&
         (ca = closed.rule.right_assoc) &&
         ([...oa].filter(x => ca.has(x)).length > 0)) {
-      this.logger.debug(`  addFromOpenClosed canceling by right_assoc: ${oa} & ${ca}`);
+      this.logger.debug(`  addFromOpenClosed canceling by right_assoc: ${[...oa]} & ${[...ca]}`);
       return;
     }
     // non-association check
@@ -404,7 +404,7 @@ class Chart {
         (oa = open.rule.non_assoc) &&
         (ca = closed.rule.non_assoc) &&
         ([...oa].filter(x => ca.has(x)).length > 0)) {
-      this.logger.debug(`  addFromOpenClosed canceling by non_assoc: ${oa} & ${ca}`);
+      this.logger.debug(`  addFromOpenClosed canceling by non_assoc: ${[...oa]} & ${[...ca]}`);
       return;
     }
     /* eslint-enable no-cond-assign */

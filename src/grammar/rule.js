@@ -113,6 +113,19 @@ class Rule {
       rhs = rhs.replace(weightRegExp, '');
     }
 
+    const opPrecedenceRegExp = /opPrecedence:\s*([\w:]+)/;
+    const precedence = opPrecedenceRegExp.exec(rhs);
+    if (precedence) {
+      options.opPrecedence = precedence[1];
+      rhs = rhs.replace(opPrecedenceRegExp, '');
+    }
+    const assocRegExp = /(left_assoc|right_assoc|non_assoc):\s*(\w+)/;
+    const assoc = assocRegExp.exec(rhs);
+    if (assoc) {
+      options[assoc[1]] = assoc[2];
+      rhs = rhs.replace(assocRegExp, '');
+    }
+
     rhs = rhs.match(
       /"(?:\\.|[^"\\])*"|[A-Za-z0-9_]+(?:\([A-Za-z0-9_]+\))?|\{%[\w\W]*%\}|\S+/g
     ) || [];

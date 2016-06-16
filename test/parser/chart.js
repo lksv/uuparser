@@ -496,10 +496,10 @@ describe('Chart', () => {
         lhs,
         [new NonTerminal('Y')],
         undefined,
-        { right_assoc: 'some,other' }
+        { non_assoc: 'some,other' }
       );
       const closedRule = new Rule(
-        new NonTerminal('Y'), [], undefined, { right_assoc: 'other, any' }
+        new NonTerminal('Y'), [], undefined, { non_assoc: 'other, any' }
       );
       const open = new ChartItem({ rule: openRule, sidx: 0, eidx: 5, dot: 0 });
       const closed = new ChartItem({ rule: closedRule, sidx: 5, eidx: 5, dot: 0 });
