@@ -39,8 +39,18 @@ describe('Rule', () => {
     });
 
     it('when options is defined', () => {
-      expect(new Rule(lhs, [], undefined, { weight: 0.1 }).toString()).to
-        .equal('A ->  {"weight":0.1}');
+      const subject = new Rule(lhs, [], undefined, {
+        weight: 0.1,
+        opPrecedence: 'multi:10',
+        left_assoc: 'multi,div,plus,minus',
+        right_assoc: 'exp',
+        non_assoc: 'negation',
+      });
+      expect(subject.toString()).to
+        .equal(
+          'A ->  {"weight":0.1,"opPrecedence":"multi:10","left_assoc":"multi,div,plus,minus",' +
+          '"right_assoc":"exp","non_assoc":"negation"}'
+        );
     });
 
     it('when semRes and options are defined', () => {
@@ -48,10 +58,18 @@ describe('Rule', () => {
       const regExpTerm = new RegExpTerminal('def');
 
       const subject =
-        new Rule(lhs, [lhs, term, regExpTerm], () => 123, { weight: 0.1 });
+        new Rule(
+          lhs,
+          [lhs, term, regExpTerm],
+          () => 123,
+          { weight: 0.1, opPrecedence: 'multi:10', left_assoc: 'plus,minus' }
+        );
 
       expect(subject.toString()).to
-        .equal('A -> A "abc" /def/y {% () => 123 %} {"weight":0.1}');
+        .equal(
+          'A -> A "abc" /def/y {% () => 123 %} ' +
+          '{"weight":0.1,"opPrecedence":"multi:10","left_assoc":"plus,minus"}'
+        );
     });
   });
 

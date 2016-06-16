@@ -436,6 +436,79 @@ describe('Chart', () => {
       expect(newEdge.history[0].open).to.eql(open);
       expect(newEdge.history[0].closed).to.eql(reducedChartItem);
     });
+
+    it('cancel adding when opPrecedence is higher then reduced edge', () => {
+      const openRule = new Rule(
+        lhs, [new NonTerminal('Y')], undefined, { opPrecedence: 'first:1,second:100' }
+      );
+      const closedRule = new Rule(
+        new NonTerminal('Y'), [], undefined, { opPrecedence: 'first:1,other:12,second:10' }
+      );
+      const open = new ChartItem({ rule: openRule, sidx: 0, eidx: 5, dot: 0 });
+      const closed = new ChartItem({ rule: closedRule, sidx: 5, eidx: 5, dot: 0 });
+
+      subject._add(open);
+      expect(
+        () => subject.addFromOpenClosed(open, closed)
+      ).to.not.change(subject.hypothesis, 'length');
+    });
+
+    it('cancel adding when left_assoc exists and dot isn\'t on begining', () => {
+      const openRule = new Rule(
+        lhs,
+        [new Terminal('x'), new NonTerminal('Y')],
+        undefined,
+        { left_assoc: 'some,other' }
+      );
+      const closedRule = new Rule(
+        new NonTerminal('Y'), [], undefined, { left_assoc: 'other, any' }
+      );
+      const open = new ChartItem({ rule: openRule, sidx: 0, eidx: 5, dot: 1 });
+      const closed = new ChartItem({ rule: closedRule, sidx: 5, eidx: 5, dot: 0 });
+
+      subject._add(open);
+      expect(
+        () => subject.addFromOpenClosed(open, closed)
+      ).to.not.change(subject.hypothesis, 'length');
+    });
+
+    it('cancel adding when right_assoc exists and dot isn\'t on end', () => {
+      const openRule = new Rule(
+        lhs,
+        [new NonTerminal('Y'), new Terminal('x')],
+        undefined,
+        { right_assoc: 'some,other' }
+      );
+      const closedRule = new Rule(
+        new NonTerminal('Y'), [], undefined, { right_assoc: 'other, any' }
+      );
+      const open = new ChartItem({ rule: openRule, sidx: 0, eidx: 5, dot: 0 });
+      const closed = new ChartItem({ rule: closedRule, sidx: 5, eidx: 5, dot: 0 });
+
+      subject._add(open);
+      expect(
+        () => subject.addFromOpenClosed(open, closed)
+      ).to.not.change(subject.hypothesis, 'length');
+    });
+
+    it('cancel adding when non_assoc exists', () => {
+      const openRule = new Rule(
+        lhs,
+        [new NonTerminal('Y')],
+        undefined,
+        { right_assoc: 'some,other' }
+      );
+      const closedRule = new Rule(
+        new NonTerminal('Y'), [], undefined, { right_assoc: 'other, any' }
+      );
+      const open = new ChartItem({ rule: openRule, sidx: 0, eidx: 5, dot: 0 });
+      const closed = new ChartItem({ rule: closedRule, sidx: 5, eidx: 5, dot: 0 });
+
+      subject._add(open);
+      expect(
+        () => subject.addFromOpenClosed(open, closed)
+      ).to.not.change(subject.hypothesis, 'length');
+    });
   });
 
   describe('#addPredicted', () => {

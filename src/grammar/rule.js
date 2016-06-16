@@ -12,8 +12,11 @@ class Rule {
    *   * entity
    *   * priority=INTEGER
    *   * weight=FLOAT
-   *   * op_precedence=INTEGER
-   *   * assoc=String [left|right|noassoc]
+   *   * opPrecedence=INTEGER
+   *
+   *   * left_assoc=Set
+   *   * right_assoc=Set
+   *   * non_assoc=Set
    * @constructor
    * @param {NonTerminal} lhs Left Hand Side of the rule
    * @param {Array} rhs Right Hand Side of the rule (arry of symbols)
@@ -34,6 +37,22 @@ class Rule {
     this.rhs = rhs || [];
     this.semRes = semRes;
     this.entity = options.entity;
+    if (options.opPrecedence) {
+      this.opPrecedence = options
+        .opPrecedence.split(/,\s*/)
+        .reduce((res, op) => {
+          const [opName, opValue] = op.split(/:\s*/);
+          res.set(opName, opValue);
+          return res;
+        }, new Map);
+      this.opPrecedence_keys = new Set(this.opPrecedence.keys());
+    } else {
+      this.opPrecedence_keys = undefined;
+      this.opPrecedence = undefined;
+    }
+    this.left_assoc = (options.left_assoc && new Set(options.left_assoc.split(/,\s*/)));
+    this.right_assoc = (options.right_assoc && new Set(options.right_assoc.split(/,\s*/)));
+    this.non_assoc = (options.non_assoc && new Set(options.non_assoc.split(/,\s*/)));
     this.weight = (options.weight === undefined) ? 1.0 : options.weight;
     this.options = options;
 

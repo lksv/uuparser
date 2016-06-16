@@ -360,11 +360,55 @@ class Chart {
    * and *closed* edge  B → γ• <closedSidx, closedEidx>
    * put edge to agenda: A -> αB•β <openSidx, closedEidx>
    *
+   * This method check for opPrecedence and association.
+   * It might cancel adding a new edge in case of wrong association or opPrecedence
+   *
+   *
    * @param {ChartItem} open - open edge
    * @param {ChartItem} closed - closed edge
    * @returns {undefined}
    */
   addFromOpenClosed(open, closed) {
+    /* eslint-disable no-cond-assign */
+    let po, pc, oa, ca; // eslint-disable-line one-var-declaration-per-line, one-var
+    // rule operator precedence check
+    if ((po = open.rule.opPrecedence_keys) &&
+        (pc = closed.rule.opPrecedence_keys) &&
+        [...po].find(key => (
+          pc.has(key) &&
+          (open.rule.opPrecedence.get(key) > closed.rule.opPrecedence.get(key))
+          )
+        )
+       ) {
+      this.logger.debug('  addFromOpenClosed canceling by precedence.');
+      return;
+    }
+    // left association check
+    if ((open.dot !== 0) &&
+        (oa = open.rule.left_assoc) &&
+        (ca = closed.rule.left_assoc) &&
+        ([...oa].filter(x => ca.has(x)).length > 0)) {
+      this.logger.debug(`  addFromOpenClosed canceling by left_assoc: ${oa} & ${ca}`);
+      return;
+    }
+    // right association check
+    if (!open.isReducedItem() &&
+        (oa = open.rule.right_assoc) &&
+        (ca = closed.rule.right_assoc) &&
+        ([...oa].filter(x => ca.has(x)).length > 0)) {
+      this.logger.debug(`  addFromOpenClosed canceling by right_assoc: ${oa} & ${ca}`);
+      return;
+    }
+    // non-association check
+    if (
+        (oa = open.rule.non_assoc) &&
+        (ca = closed.rule.non_assoc) &&
+        ([...oa].filter(x => ca.has(x)).length > 0)) {
+      this.logger.debug(`  addFromOpenClosed canceling by non_assoc: ${oa} & ${ca}`);
+      return;
+    }
+    /* eslint-enable no-cond-assign */
+
     const newEdge = new ChartItem(open, {
       eidx: closed.eidx,
       dot: open.dot + 1,
