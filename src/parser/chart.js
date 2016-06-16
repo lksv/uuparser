@@ -15,7 +15,7 @@
  * * close:    B -> any . # any reduced item
  *
  */
-const NonTerminal = require('../grammar').NonTerminal;
+const { ApproxTerminal, NonTerminal } = require('../grammar');
 const { NodeResult, NodeResultArgs } = require('./semres');
 const DefaultLogger = require('../utils/logger');
 
@@ -339,6 +339,10 @@ class Chart {
     this.hypothesis = [];
     this.hypothesisIdx = 0;
 
+    // used in initial phase for bottomUp parser
+    this.initChartHypothesis = [];
+    this.nextRoundHypothesis = [];
+
     // List of full rules indexed by the [lhs, idx]
     //
     // It is usefull for fast obtaining all hypothesis
@@ -357,6 +361,12 @@ class Chart {
     this.logger = logger || new DefaultLogger();
   }
 
+  parserInitialized() {
+    this.hypothesisIdx += this.initChartHypothesis.length;
+    this.hypothesis = this.initChartHypothesis.concat(this.hypothesis);
+    this.initChartHypothesis.length = 0;
+  }
+
   /**
    * Add chartItem to the agenda
    * it also update all indexes (waitingRules, reducedRules)
@@ -364,9 +374,10 @@ class Chart {
    * Private method, use #addFromOpenClosed, #addPredicted, #addScanned instead
    *
    * @param {ChartItem} chartItem Edge to store
+   * @param {Array} storage=this.hypothesis where to put hypothesis
    * @returns {undefined}
    */
-  _add(chartItem) {
+  _add(chartItem, storage = this.hypothesis) {
     const alreadyExists = this.find(chartItem);
     if (alreadyExists) {
       // do not add chartItem if already exists in Chart
@@ -375,9 +386,14 @@ class Chart {
       return;
     }
     this.existChartItems.add(chartItem.code);
-    this.hypothesis.push(chartItem);
 
     const nextSymbol = chartItem.nextSymbol();
+
+    const currentStorage = (nextSymbol instanceof ApproxTerminal)
+      ? this.nextRoundHypothesis
+      : storage;
+
+    currentStorage.push(chartItem);
 
     if (nextSymbol instanceof NonTerminal) {
       this.waitingRules.add(nextSymbol, chartItem.eidx, chartItem);
@@ -492,17 +508,12 @@ class Chart {
 
   /**
    * Create initial ChartItem(s).
-   * If *eidx* and *termMatch* are defined create also second chartItems with
-   * jump over the first one and the first (the first one should be moved to
-   * chart).
+   *
    * @param {Number} idx sidx for initial edge
    * @param {Rule} rule rule Edge rule
-   * @param {Number} eidx eidx for the second rule
-   * @param {String|NodeResult} termMatch termMatch for the second rule
    * @returns {undefined}
    */
-  // addInitial(idx, rule, eidx, termMatch) {
-  addInitial(idx, rule, eidx, termMatch) {
+  addInitial(idx, rule) {
     const open = new ChartItem({
       dot: 0,
       sidx: idx,
@@ -510,20 +521,37 @@ class Chart {
       rule,
     });
     this._add(open);
+  }
 
-    // just make eslint happy:)
-    eidx + termMatch;  // eslint-disable-line
-    // if (Number.isInteger(eidx) && (termMatch !== undefined)) {
-    //   // TODO: for speedup is necessary add previews rule to chart, not agenda.
-    //   this._add(new ChartItem({
-    //     dot: 1,
-    //     sidx: idx,
-    //     eidx,
-    //     rule,
-    //     open,
-    //     termMatch,
-    //   }));
-    // }
+  /**
+   * Create initial ChartItem(s).
+   * Put initial edge to chart and also one edge with skipped firt terminal to agenda
+   *
+   * @param {Number} idx sidx for initial edge
+   * @param {Rule} rule rule Edge rule
+   * @param {Number} eidx eidx for the second rule
+   * @param {String|NodeResult} termMatch termMatch for the second rule
+   * @returns {undefined}
+   */
+  // addInitialProcessed(idx, rule, eidx, termMatch) {
+  addInitialProcessed(idx, rule) {
+    const open = new ChartItem({
+      dot: 0,
+      sidx: idx,
+      eidx: idx,
+      rule,
+    });
+    this._add(open); // , this.initChartHypothesis);
+
+    // console.log(termMatch, idx, eidx, rule);
+    // this._add(new ChartItem({
+    //   dot: 1,
+    //   sidx: idx,
+    //   eidx,
+    //   rule,
+    //   open,
+    //   termMatch,
+    // }));
   }
 
   getReduced(symbol, idx) {

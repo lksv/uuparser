@@ -240,11 +240,15 @@ describe('Parser', () => {
     it('shold call chart.addInitial() for each found terminal match', () => {
       const subject = new Parser(grammar, 'bottomUp');
       subject.input = 'two words';
-      sinon.spy(subject.chart, 'addInitial');
+      sinon.spy(subject.chart, 'addInitialProcessed');
       subject.initBottomUp();
-      expect(subject.chart.addInitial).to.have.been.calledTwice;
-      expect(subject.chart.addInitial).to.have.been.calledWith(0, ruleA2regExpTerm, 3, 'two');
-      expect(subject.chart.addInitial).to.have.been.calledWith(4, ruleA2regExpTerm, 9, 'words');
+      expect(subject.chart.addInitialProcessed).to.have.been.calledTwice;
+      expect(subject.chart.addInitialProcessed).to.have.been.calledWith(
+        0, ruleA2regExpTerm, 3, 'two'
+      );
+      expect(subject.chart.addInitialProcessed).to.have.been.calledWith(
+        4, ruleA2regExpTerm, 9, 'words'
+      );
     });
   });
 

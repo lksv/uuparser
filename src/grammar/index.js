@@ -9,6 +9,7 @@ module.exports = {
   GrmSymbol: symbols.GrmSymbol,
   NonTerminal: symbols.NonTerminal,
   Terminal: symbols.Terminal,
+  ApproxTerminal: symbols.ApproxTerminal,
   RegExpTerminal: symbols.RegExpTerminal,
   EntityTerminal,
 

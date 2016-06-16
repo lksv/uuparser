@@ -146,6 +146,7 @@ class Parser {
 
     if (this.type === 'bottomUp') this.initBottomUp();
     if (this.type === 'topDown') this.initTopDown();
+    this.chart.parserInitialized();
 
     this.initedTime = new Date().getTime();
     this.logger.debug(`Init Agenda edges=${this.chart.hypothesis.length}`);
@@ -180,7 +181,7 @@ class Parser {
         edge => (edge.sidx === 0 && edge.eidx === this.input.length)
       );
       // filter priority
-      parsedEdges.sort((a, b) => (b.rule.priority || 0) - (a.rule.priority || 0))
+      parsedEdges.sort((a, b) => (b.rule.priority || 0) - (a.rule.priority || 0));
       const maxPriority = parsedEdges[0] && parsedEdges[0].rule.priority;
       parsedEdges = parsedEdges.filter(
         edge => (!edge.rule.priority) || (edge.rule.priority === maxPriority)
@@ -225,7 +226,7 @@ class Parser {
         rule.rhs[0].matchAll(
           this.input,
           // TODO: needs to employ this.lexer for calculating eidx
-          (match, sidx, eidx) => this.chart.addInitial(sidx, rule, eidx, match)
+          (match, sidx, eidx) => this.chart.addInitialProcessed(sidx, rule, eidx, match)
         );
       }
     );

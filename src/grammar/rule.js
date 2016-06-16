@@ -129,7 +129,7 @@ class Rule {
     const priorityRegExp = /priority:\s*(\d+)/;
     const priority = priorityRegExp.exec(rhs);
     if (priority) {
-      options.priority = parseInt(priority[1]);
+      options.priority = +priority[1];
       rhs = rhs.replace(priorityRegExp, '');
     }
 

@@ -22,7 +22,7 @@ EXP ->
   "(" EXP ")"  {% (_, a, b, c) => b %}
 `);
 
-console.log(grammar.toString());
+// console.log(grammar.toString());
 
 const test = (inputString, result, parserType) => {
   it(`correctly parse '${inputString}' => '${result}'`, () => {
