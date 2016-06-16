@@ -186,6 +186,41 @@ describe('ChartItem', () => {
     });
   });
 
+  describe('#_filteredHistory', () => {
+    let constructClosedIter = 0;
+    const constructClosed = (priority) => {
+      const priorityRule = new Rule(lhs, rhs, undefined, { priority });
+      return new ChartItem({
+        sidx: constructClosedIter++,
+        eidx: 1,
+        dot: 1,
+        rule: priorityRule,
+      });
+    };
+
+    const closedUndef1 = new ChartItemHistory(null, constructClosed(undefined));
+    const closedUndef2 = new ChartItemHistory(null, constructClosed(undefined));
+    const closed10a = new ChartItemHistory(null, constructClosed(10));
+    const closed10b = new ChartItemHistory(null, constructClosed(10));
+    const closed1 = new ChartItemHistory(null, constructClosed(1));
+    const closed5 = new ChartItemHistory(null, constructClosed(5));
+
+    it('should not filter hypothesis witout priority', () => {
+      subject.history.push(closedUndef1);
+      subject.history.push(closed10a);
+      subject.history.push(closedUndef2);
+      expect(subject._filteredHistory()).to.eql(subject.history);
+    });
+
+    it('should filter out hypothesis with lower priority', () => {
+      subject.history.push(closed1);
+      subject.history.push(closed10a);
+      subject.history.push(closed10b);
+      subject.history.push(closed5);
+      expect(subject._filteredHistory()).to.eql([closed10a, closed10b]);
+    });
+  });
+
   describe('#semRes', () => {
     it('returns array with rule.semRes() applied to empty NodeResultArgs for A -> .', () => {
       subject = new ChartItem({

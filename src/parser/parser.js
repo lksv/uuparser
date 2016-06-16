@@ -179,6 +179,12 @@ class Parser {
       parsedEdges = parsedEdges.filter(
         edge => (edge.sidx === 0 && edge.eidx === this.input.length)
       );
+      // filter priority
+      parsedEdges.sort((a, b) => (b.rule.priority || 0) - (a.rule.priority || 0))
+      const maxPriority = parsedEdges[0] && parsedEdges[0].rule.priority;
+      parsedEdges = parsedEdges.filter(
+        edge => (!edge.rule.priority) || (edge.rule.priority === maxPriority)
+      );
       this.logger.info(`Parent Full Edges count: ${parsedEdges.length}`);
     }
     const results = parsedEdges.reduce(

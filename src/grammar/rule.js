@@ -54,6 +54,7 @@ class Rule {
     this.right_assoc = (options.right_assoc && new Set(options.right_assoc.split(/,\s*/)));
     this.non_assoc = (options.non_assoc && new Set(options.non_assoc.split(/,\s*/)));
     this.weight = (options.weight === undefined) ? 1.0 : options.weight;
+    this.priority = options.priority;
     this.options = options;
 
     this.hashCode = this.toString();
@@ -125,6 +126,13 @@ class Rule {
       options[assoc[1]] = assoc[2];
       rhs = rhs.replace(assocRegExp, '');
     }
+    const priorityRegExp = /priority:\s*(\d+)/;
+    const priority = priorityRegExp.exec(rhs);
+    if (priority) {
+      options.priority = parseInt(priority[1]);
+      rhs = rhs.replace(priorityRegExp, '');
+    }
+
 
     rhs = rhs.match(
       /"(?:\\.|[^"\\])*"|[A-Za-z0-9_]+(?:\([A-Za-z0-9_]+\))?|\{%[\w\W]*%\}|\S+/g

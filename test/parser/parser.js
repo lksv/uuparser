@@ -253,5 +253,6 @@ describe('Parser', () => {
     it('should call #semRes on all chart.parentEntities');
     it('should return only full parserd tree when full=true');
     it('should return all hypothesis when full=false');
+    it('should filter lower priority rules when full=true');
   });
 });

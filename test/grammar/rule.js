@@ -45,11 +45,12 @@ describe('Rule', () => {
         left_assoc: 'multi,div,plus,minus',
         right_assoc: 'exp',
         non_assoc: 'negation',
+        priority: 10,
       });
       expect(subject.toString()).to
         .equal(
           'A ->  {"weight":0.1,"opPrecedence":"multi:10","left_assoc":"multi,div,plus,minus",' +
-          '"right_assoc":"exp","non_assoc":"negation"}'
+          '"right_assoc":"exp","non_assoc":"negation","priority":10}'
         );
     });
 
@@ -62,13 +63,13 @@ describe('Rule', () => {
           lhs,
           [lhs, term, regExpTerm],
           () => 123,
-          { weight: 0.1, opPrecedence: 'multi:10', left_assoc: 'plus,minus' }
+          { weight: 0.1, opPrecedence: 'multi:10', left_assoc: 'plus,minus', priority: 15 }
         );
 
       expect(subject.toString()).to
         .equal(
           'A -> A "abc" /def/y {% () => 123 %} ' +
-          '{"weight":0.1,"opPrecedence":"multi:10","left_assoc":"plus,minus"}'
+          '{"weight":0.1,"opPrecedence":"multi:10","left_assoc":"plus,minus","priority":15}'
         );
     });
   });
@@ -95,6 +96,11 @@ describe('Rule', () => {
     it('correctly parse rule with entity', () => {
       expect(Rule._loadRule(lhs, ' entity: true')).to.eql(
         new Rule(lhs, [], undefined, { entity: true })
+      );
+    });
+    it('correctly parse rule with priority', () => {
+      expect(Rule._loadRule(lhs, ' priority: 123')).to.eql(
+        new Rule(lhs, [], undefined, { priority: 123 })
       );
     });
     it('correctly parse rule with proc', () => {

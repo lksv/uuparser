@@ -37,6 +37,15 @@ class ChartItemHistory {
       ':' +
       (this.closed ? this.closed.code : 'null');
   }
+
+  /**
+   * Returns priority of closed edge.
+   *
+   * @returns {Integer|undefined} priority of rule of closed edge
+   */
+  closedPriority() {
+    return this.closed && this.closed.rule.priority;
+  }
 }
 
 /**
@@ -108,6 +117,30 @@ class ChartItem {
   }
 
   /**
+   * Returns filtered history array by priority.
+   *
+   * It is filtered by closed rule priproty.
+   * Hypothesis without defined priority aren't filtered
+   * It is taken hypothesis with the highest priority.
+   *
+   * @returns {Array} array of hypothesis with the highest priority (or the without defined one)
+   */
+  _filteredHistory() {
+    // descendant sort by the priority
+    const sortedHistory = this.history.sort(
+      (a, b) => ((b.closedPriority() || 0) - (a.closedPriority() || 0))
+    );
+    const currentPriority = sortedHistory[0] && sortedHistory[0].closedPriority() || -1;
+    const priorityFilterdHistory = sortedHistory.filter(
+      item => {
+        const p = item.closedPriority();
+        return !p || p === currentPriority;
+      }
+    );
+    return priorityFilterdHistory;
+  }
+
+  /**
    * Returns array of:
    * * NodeResult for reduced edges
    * * NodeResultArgs otherwise
@@ -140,7 +173,8 @@ class ChartItem {
     indentLogger(() => `Entering semRes ${this.toString()}`);
 
     let nodeResultsArgs = []; // eslint-disable-line vars-on-top
-    this.history.forEach(h => {
+
+    this._filteredHistory().forEach(h => {
       const openSemRes = h.open.semRes(nested + 1, logger);
       const closedSemRes = h.termMatch
         ? h.termMatch.map(tm => new NodeResult(tm, 1.0, `"${tm}"`))
