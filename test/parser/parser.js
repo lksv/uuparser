@@ -252,6 +252,17 @@ describe('Parser', () => {
     });
   });
 
+  describe('#approxScanner', () => {
+    it('throw an error when called on non ApproxTerminal');
+    it('throw an error when no next symbol');
+    context('when onlyFirsts is true', () => {
+      it('calls symbol#match for each next symbol edge');
+    });
+    context('when onlyFirsts is true', () => {
+      it('calls symbol#match for all firsts next symbol edges');
+    });
+  });
+
   describe('#results', () => {
     it('should throw error when called before #parser method');
     it('should call #semRes on all chart.parentEntities');

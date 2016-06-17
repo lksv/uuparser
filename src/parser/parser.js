@@ -128,6 +128,68 @@ class Parser {
     }
   }
 
+  _parseCurrentAgenda() {
+    let currentChartItem;
+    // eslint-disable-next-line
+    while (currentChartItem = this.chart.next()) {
+      this.next(currentChartItem);
+    }
+  }
+
+  approxScanner(edge) {
+    if (!edge.isApproxItem()) {
+      throw new Error('Method #approxScanner used on non ApproxTerminal symbol');
+    }
+    const symbol = edge.nextSymbol();
+    const nextSymbol = edge.rule.rhs[edge.dot + 1];
+    if (!nextSymbol) {
+      throw new Error('ApproxTerminal need to be followed by NonTerminal in any rule');
+    }
+    let nextEdges = this.chart.hypothesis.filter(
+      h => (
+        (h.nextSymbol() === nextSymbol) &&
+        (h.eidx > edge.eidx) &&
+        (h.eidx - edge.exec > symbol.maxGap)
+      )
+    );
+
+    if (symbol.onlyFirsts) {
+      const firstIdx = nextEdges.reduce(
+        (min, e) => ((min > e.sidx) ? e.sidx : min),
+        Number.MAX_SAFE_INTEGER
+      );
+      nextEdges = nextEdges.filter(h => h.sidx === firstIdx);
+    }
+
+    nextEdges.forEach(nextEdge => {
+      const [res, eidx] = symbol.match(this.input, edge.eidx, nextEdge.sidx);
+      if (res) {
+        this.chart.addScanned(edge, eidx, res);
+      }
+    });
+  }
+
+  _parseNextRound() {
+    this.chart.nextRoundHypothesis.forEach(edge => this.approxScanner(edge));
+    this.chart.nextRoundHypothesis.length = 0;
+  }
+
+  /**
+   * Parse current agenda, then checks all nextRoundHypothesis
+   * and whole again until new hypotheis are created.
+   *
+   * @return {undefined}
+   */
+  _parseAll() {
+    do {
+      // this completes normal parsing process
+      this._parseCurrentAgenda();
+      // handle all edges which are waiting for ApproxTerminal symbol
+      this._parseNextRound();
+      // one time again if still someting exists in agenda
+    } while (!this.chart.isAgendaEmpty());
+  }
+
   /**
    * Parse given *input* string and generate all posible edges to chart
    *
@@ -135,7 +197,6 @@ class Parser {
    * @return {undefined}
    */
   parse(input) {
-    let currentChartItem;
     this.startTime = new Date().getTime();
 
     // TODO: do not like when setting "object state" (e.i. input) here,
@@ -151,10 +212,9 @@ class Parser {
     this.initedTime = new Date().getTime();
     this.logger.debug(`Init Agenda edges=${this.chart.hypothesis.length}`);
 
-    // eslint-disable-next-line
-    while (currentChartItem = this.chart.next()) {
-      this.next(currentChartItem);
-    }
+
+    this._parseAll();
+
     this.chartDoneTime = new Date().getTime();
     const chartTakesTime = this.chartDoneTime - this.initedTime;
     this.logger.info(

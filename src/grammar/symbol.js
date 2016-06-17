@@ -118,8 +118,65 @@ class Terminal extends GrmSymbol {
 GrmSymbol.registerGrammarSymbol(/^"(.*)"$/, (match) => new Terminal(match[1]));
 
 class ApproxTerminal extends Terminal {
-  // TODO
+  constructor(name) {
+    super(name);
+    const data = ApproxTerminal.storage.get(name);
+    if (!data) {
+      throw new Error(`ApproxTerminal with name \'${name}\'is not registered`);
+    }
+    this.maxGap = data.maxGap;
+    this.onlyFirsts = data.onlyFirsts;
+    this.callback = data.callback;
+  }
+
+
+  /**
+   * Test wheather insput string *str* from *sidx* position up to *eidx* position
+   * is matched by this ApproxTerminal.
+   *
+   * Returns array of two items:
+   * * matchedText
+   * * eidx - same as input *eidx*
+   *
+   * @param {string} str Input string
+   * @param {Number} sidx starting position in *str*
+   * @param {Number} eidx finish positing in *str*
+   * @returns {Array} [[matchedText], eidx]
+   */
+  match(str, sidx, eidx) {
+    return this.callback(str, sidx, eidx) ? [str.slice(sidx, eidx), eidx] : [undefined, undefined];
+  }
+
+  matchAll() {
+    // Do not match anything
+    return undefined;
+  }
+
+  toString() {
+    return `ApproxTerminal(${this.name})`;
+  }
+
+  /**
+   * Register parcicular ApproxTerminal by name
+   * Callback is used to match ApproxTerminal in two NonTerminals.
+   *
+   * Callback takes argumets:
+   *   * inputString
+   *   * sidx  - where is the starting positin on the inputString
+   *   * eidx  - finis position to match the input string
+   *
+   * @param {string} name Name of the registered ApproxTerminal
+   * @param {Number} maxGap maximal length of input string between sidx and eidx
+   * @param {Boolean} onlyFirsts try to mach only first occurence of followng NonTerminal if true
+   * @param {Fuction} callback callback used to match the ApproxTerminal
+   * @returns {undefined}
+   */
+  static register(name, maxGap, onlyFirsts, callback) {
+    ApproxTerminal.storage.set(name, { maxGap, onlyFirsts, callback });
+  }
 }
+ApproxTerminal.storage = new Map;
+
 
 // see http://www.unicode.org/reports/tr44/#Cased
 //

@@ -98,6 +98,10 @@ class ChartItem {
     return !(this.nextSymbol() instanceof NonTerminal);
   }
 
+  isApproxItem() {
+    return (this.nextSymbol() instanceof ApproxTerminal);
+  }
+
   /**
    * An ChartItem with dot at the end (i.e. dot is after the RHS)
    * is called reduced item.
@@ -568,13 +572,18 @@ class Chart {
     }
     // chartItem exists, find it and return
     const addingHashCode = chartItem.code;
-    return this.hypothesis.find(item => item.code === addingHashCode);
+    return this.hypothesis.find(item => item.code === addingHashCode) ||
+      this.nextRoundHypothesis.find(item => item.code === addingHashCode);
   }
 
   next() {
     const currentEdge = this.hypothesis[this.hypothesisIdx++];
     this.logger.debug(`processing edge[${this.hypothesisIdx}]: ${currentEdge}`);
     return currentEdge;
+  }
+
+  isAgendaEmpty() {
+    return this.hypothesis.length <= this.hypothesisIdx;
   }
 
   /**
