@@ -6,14 +6,16 @@
  *
  */
 class NodeResult {
-  constructor(data, weight, txt) {
+  constructor(data, weight, txt, sidx, eidx) {
     this.data = data;
     this.weight = weight;
     this.txt = txt;
+    this.sidx = sidx;
+    this.eidx = eidx;
   }
 
   toString() {
-    return `NodeResult(${this.data}, ${this.weight}, ${this.txt})`;
+    return `NodeResult[${this.sidx}-${this.eidx}](${this.data}, ${this.weight}, ${this.txt})`;
   }
 }
 
@@ -75,9 +77,11 @@ class NodeResultArgs {
    * @param {Function} callback callback to call, for propeer calculation of NodeResult.data
    * @param {Float} weight weight of processed rule
    * @param {String} lhsName name to surronoud the NodeResult.txt (LHS name of the processed rule)
+   * @param {number} sidx index in input string the nonterminal matched from
+   * @param {number} eidx index in input string the nonterminal matched to
    * @returns {NodeResult} calculated NodeResult
    */
-  apply(callback, weight, lhsName) {
+  apply(callback, weight, lhsName, sidx, eidx) {
     const callbackArgs = [[this.array, weight, lhsName]].concat(this.array.map(d => d.data));
     const applyFunction = callback || NodeResultArgs.defaultCallback;
     const callbackResult = applyFunction.apply(undefined, callbackArgs);
@@ -95,7 +99,9 @@ class NodeResultArgs {
     return new NodeResult(
       callbackResult,
       this.array.reduce((prev, nr) => prev * nr.weight, 1.0) * weight,
-      `${lhsName}(${this.array.map(nr => nr.txt).join(', ')})`
+      `${lhsName}(${this.array.map(nr => nr.txt).join(', ')})`,
+      sidx,
+      eidx
     );
   }
 

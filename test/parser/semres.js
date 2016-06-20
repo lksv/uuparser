@@ -14,8 +14,8 @@ describe('NodeResult', () => {
 
   describe('#toString', () => {
     it('should serialize data, weight and txt to string', () => {
-      const subject = new NodeResult('data', 0.5, 'txt');
-      expect(subject.toString()).to.equal('NodeResult(data, 0.5, txt)');
+      const subject = new NodeResult('data', 0.5, 'txt', 10, 100);
+      expect(subject.toString()).to.equal('NodeResult[10-100](data, 0.5, txt)');
     });
   });
 });
@@ -43,10 +43,11 @@ describe('NodeResultArgs', () => {
   describe('#toString', () => {
     it('should serialize array of NodeResults to string', () => {
       const subject = new NodeResultArgs([
-        new NodeResult('RHS1-A', 1.0, 'txt1'), new NodeResult('RHS2-A', 0.5, 'txt2'),
+        new NodeResult('RHS1-A', 1.0, 'txt1', 0, 10),
+        new NodeResult('RHS2-A', 0.5, 'txt2', 10, 20),
       ]);
       expect(subject.toString()).to.equal(
-        'NodeResultArgs(NodeResult(RHS1-A, 1, txt1), NodeResult(RHS2-A, 0.5, txt2))'
+        'NodeResultArgs(NodeResult[0-10](RHS1-A, 1, txt1), NodeResult[10-20](RHS2-A, 0.5, txt2))'
       );
     });
   });

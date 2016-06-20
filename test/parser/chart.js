@@ -247,7 +247,7 @@ describe('ChartItem', () => {
       const open = new ChartItem({ rule: ruleX, dot: 0, sidx: 0, eidx: 0 });
       subject = new ChartItem({ rule: ruleX, dot: 1, sidx: 0, eidx: 1, open, termMatch: ['x'] });
       expect(subject.semRes()).to.eql([
-        new NodeResult('x', 1.0, 'A("x")'),
+        new NodeResult('x', 1.0, 'A("x")', 0, 1),
       ]);
     });
 
@@ -273,7 +273,7 @@ describe('ChartItem', () => {
         closed,
       });
       expect(subject.semRes()).to.eql([
-        new NodeResult('B:C', 1.0, 'A(B(), C())'),
+        new NodeResult('B:C', 1.0, 'A(B(), C())', 0, 0),
       ]);
     });
     context('when history contains alternatives', () => {
@@ -305,10 +305,10 @@ describe('ChartItem', () => {
           closed,
         });
         expect(subject.semRes()).to.eql([
-          new NodeResult('B1:C1', 1.0, 'A(B(), C())'),
-          new NodeResult('B1:C2', 0.7, 'A(B(), C())'),
-          new NodeResult('B2:C1', 0.9, 'A(B(), C())'),
-          new NodeResult('B2:C2', 0.63, 'A(B(), C())'),
+          new NodeResult('B1:C1', 1.0, 'A(B(), C())', 0, 0),
+          new NodeResult('B1:C2', 0.7, 'A(B(), C())', 0, 0),
+          new NodeResult('B2:C1', 0.9, 'A(B(), C())', 0, 0),
+          new NodeResult('B2:C2', 0.63, 'A(B(), C())', 0, 0),
         ]);
       });
     });

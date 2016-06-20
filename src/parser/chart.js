@@ -181,7 +181,7 @@ class ChartItem {
     this._filteredHistory().forEach(h => {
       const openSemRes = h.open.semRes(nested + 1, logger);
       const closedSemRes = h.termMatch
-        ? h.termMatch.map(tm => new NodeResult(tm, 1.0, `"${tm}"`))
+        ? h.termMatch.map(tm => new NodeResult(tm, 1.0, `"${tm}"`, this.sidx, this.eidx))
         : h.closed.semRes(nested + 1, logger);
       indentLogger(() => `OpenSemRes: ${this._nrsToString(openSemRes)}`);
       indentLogger(() => `ClosedSemRes: ${this._nrasToString(closedSemRes)}`);
@@ -195,7 +195,9 @@ class ChartItem {
       const res = nodeResultsArgs.map(nra => nra.apply(
         this.rule.semRes,
         this.rule.weight,
-        this.rule.lhs.name
+        this.rule.lhs.name,
+        this.sidx,
+        this.eidx
       ));
       indentLogger(() =>
        `Leaving closed  semRes ${this.toString()} with result: ${this._nrsToString(res)}`
