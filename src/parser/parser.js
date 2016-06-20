@@ -4,8 +4,15 @@ const Chart = require('./chart').Chart;
 const DefaultLogger = require('../utils/logger');
 
 class Parser {
+  /**
+   * Creates a parser object
+   *
+   * @param {Grammar} grammar Grammar to use
+   * @param {string} type Which parser to use: topDown, bottomUp, bottomUpApprox
+   * @param {opts} opts Other options: logger and lexer
+   */
   constructor(grammar, type, opts = {}) {
-    if (['bottomUp', 'topDown'].indexOf(type) === -1) {
+    if (['bottomUp', 'topDown', 'bottomUpApprox'].indexOf(type) === -1) {
       throw new Error('Unknown parser type!');
     }
     this.logger = opts.logger || new DefaultLogger();
@@ -37,7 +44,7 @@ class Parser {
    * @returns {undefined}
    */
   completer(reducedChartItem) {
-    if (this.type === 'bottomUp') {
+    if (this.type === 'bottomUp' || this.type === 'bottomUpApprox') {
       // create predicted chartItem for each rule *reducedChartItem.lhs*
       // in grammar
       this.grammar.rulesByFirstRhs(reducedChartItem.lhs).forEach(rule => {
@@ -67,12 +74,13 @@ class Parser {
    * @returns {undefined}
    */
   predictor(open) {
-    if (this.type === 'topDown') {
+    if (this.type === 'topDown' || this.type === 'bottomUpApprox') {
       // create predicted chartItems (i.e. with dot at the beginning)
       this.grammar.rulesByLhs(open.nextSymbol()).forEach(rule => {
         this.chart.addPredicted(rule, open.eidx);
       });
-    } else {
+    }
+    if (this.type !== 'topDown') {
       // Needs to add all epsilon rules from eidx to the agenda
       //
       // For each edge as B → γ• <closedSidx, closedEidx>
@@ -129,10 +137,12 @@ class Parser {
   }
 
   _parseCurrentAgenda() {
-    let currentChartItem;
-    // eslint-disable-next-line
-    while (currentChartItem = this.chart.next()) {
-      this.next(currentChartItem);
+    this.logger.info(
+      `processing current agenda with ${this.chart.agendaSize()} items in the agenda`
+    );
+
+    while (!this.chart.isAgendaEmpty()) {
+      this.next(this.chart.next());
     }
   }
 
@@ -143,13 +153,13 @@ class Parser {
     const symbol = edge.nextSymbol();
     const nextSymbol = edge.rule.rhs[edge.dot + 1];
     if (!nextSymbol) {
-      throw new Error('ApproxTerminal need to be followed by NonTerminal in any rule');
+      throw new Error('ApproxTerminal needs to be followed by NonTerminal in any rule');
     }
     let nextEdges = this.chart.hypothesis.filter(
       h => (
-        (h.nextSymbol() === nextSymbol) &&
+        (h.rule.lhs.code === nextSymbol.code) &&
         (h.eidx > edge.eidx) &&
-        (h.eidx - edge.exec > symbol.maxGap)
+        (h.eidx - edge.eidx <= symbol.maxGap)
       )
     );
 
@@ -170,13 +180,17 @@ class Parser {
   }
 
   _parseNextRound() {
+    this.logger.info(
+      `processing current approxScanner with ${this.chart.nextRoundHypothesis.length} items`
+    );
+
     this.chart.nextRoundHypothesis.forEach(edge => this.approxScanner(edge));
     this.chart.nextRoundHypothesis.length = 0;
   }
 
   /**
    * Parse current agenda, then checks all nextRoundHypothesis
-   * and whole again until new hypotheis are created.
+   * and whole again until new hypothesis are created.
    *
    * @return {undefined}
    */
@@ -205,8 +219,8 @@ class Parser {
     this.input = input;
 
 
-    if (this.type === 'bottomUp') this.initBottomUp();
     if (this.type === 'topDown') this.initTopDown();
+    if (this.type === 'bottomUp' || this.type === 'bottomUpApprox') this.initBottomUp();
     this.chart.parserInitialized();
 
     this.initedTime = new Date().getTime();

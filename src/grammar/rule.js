@@ -135,7 +135,8 @@ class Rule {
 
 
     rhs = rhs.match(
-      /"(?:\\.|[^"\\])*"|[A-Za-z0-9_]+(?:\([A-Za-z0-9_]+\))?|\{%[\w\W]*%\}|\S+/g
+      // eslint-disable-next-line
+      /"(?:\\.|[^"\\])*"|\/(?:\\.|[^\/\\])*\/|[A-Za-z0-9_]+(?:\([A-Za-z0-9_]+\))?|\{%[\w\W]*%\}|\S+/g
     ) || [];
 
     const convertedRHSSymbols = rhs

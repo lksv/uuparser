@@ -144,7 +144,9 @@ class ApproxTerminal extends Terminal {
    * @returns {Array} [[matchedText], eidx]
    */
   match(str, sidx, eidx) {
-    return this.callback(str, sidx, eidx) ? [str.slice(sidx, eidx), eidx] : [undefined, undefined];
+    return this.callback(str, sidx, eidx)
+      ? [[str.slice(sidx, eidx)], eidx]
+      : [undefined, undefined];
   }
 
   matchAll() {
@@ -176,7 +178,10 @@ class ApproxTerminal extends Terminal {
   }
 }
 ApproxTerminal.storage = new Map;
-
+GrmSymbol.registerGrammarSymbol(
+  /^ApproxTerminal\(([A-Za-z_0-9]+)\)$/,
+  (match) => new ApproxTerminal(match[1])
+);
 
 // see http://www.unicode.org/reports/tr44/#Cased
 //

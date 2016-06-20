@@ -13,6 +13,7 @@ const {
   Terminal,
   NonTerminal,
   RegExpTerminal,
+  ApproxTerminal,
   ChartItem,
 } = require('../..');
 
@@ -253,13 +254,93 @@ describe('Parser', () => {
   });
 
   describe('#approxScanner', () => {
-    it('throw an error when called on non ApproxTerminal');
-    it('throw an error when no next symbol');
+    it('throw an error when called on non ApproxTerminal', () => {
+      const openTerm = new ChartItem({ rule: ruleE2term, sidx: 5, eidx: 5, dot: 0 });
+      const parser = new Parser(grammar, 'bottomUp');
+      const subject = () => parser.approxScanner(openTerm);
+      expect(subject).to.throw(/non ApproxTerminal symbol/);
+    });
+
+    it('throw an error when no next symbol', () => {
+      ApproxTerminal.register('at', 10, true, () => true);
+      const ruleAT = new Rule(new NonTerminal('A'), [new ApproxTerminal('at')]);
+      const openTerm = new ChartItem({ rule: ruleAT, sidx: 5, eidx: 5, dot: 0 });
+      const parser = new Parser(grammar, 'bottomUp');
+      const subject = () => parser.approxScanner(openTerm);
+      expect(subject).to.throw(/ApproxTerminal needs to be followed by NonTerminal in any rule/);
+    });
+
     context('when onlyFirsts is true', () => {
-      it('calls symbol#match for each next symbol edge');
+      ApproxTerminal.register('atOnlyFirst', 10, true, () => true);
+      it('creates edge for each next symbol edge', () => {
+        const ruleAT = new Rule(new NonTerminal('A'), [
+          new ApproxTerminal('atOnlyFirst'),
+          new NonTerminal('B'),
+        ]);
+        const ruleB = new Rule(new NonTerminal('B'), []);
+        const ruleB2 = new Rule(new NonTerminal('B'), [new Terminal('a')]);
+        const subject = new Parser(grammar, 'bottomUpApprox');
+        subject.input = '12345678910';
+        subject.chart._add(
+          new ChartItem({ rule: ruleB, sidx: 4, eidx: 4 })
+        );
+        subject.chart._add(
+          new ChartItem({ rule: ruleB, sidx: 7, eidx: 7 })
+        );
+        subject.chart._add(
+          new ChartItem({ rule: ruleB2, sidx: 7, eidx: 8 })
+        );
+        subject.chart._add(
+          new ChartItem({ rule: ruleB, sidx: 10, eidx: 10 })
+        );
+        const openTerm = new ChartItem({ rule: ruleAT, sidx: 5, eidx: 5, dot: 0 });
+        sinon.spy(subject.chart, 'addScanned');
+        subject.approxScanner(openTerm);
+        expect(subject.chart.addScanned).to.have.been.calledTwice;
+        expect(subject.chart.addScanned).to.have.been.calledWith(
+          openTerm, 7, ['67']
+        );
+        expect(subject.chart.addScanned).to.have.been.calledWith(
+          openTerm, 7, ['67']
+        );
+      });
     });
     context('when onlyFirsts is true', () => {
-      it('calls symbol#match for all firsts next symbol edges');
+      ApproxTerminal.register('atAny', 10, false, () => true);
+      it('calls symbol#match for all firsts next symbol edges', () => {
+        const ruleAT = new Rule(new NonTerminal('A'), [
+          new ApproxTerminal('atAny'),
+          new NonTerminal('B'),
+        ]);
+        const ruleB = new Rule(new NonTerminal('B'), []);
+        const ruleB2 = new Rule(new NonTerminal('B'), [new Terminal('a')]);
+        const subject = new Parser(grammar, 'bottomUpApprox');
+        subject.input = '12345678910';
+        subject.chart._add(
+          new ChartItem({ rule: ruleB, sidx: 4, eidx: 4 })
+        );
+        subject.chart._add(
+          new ChartItem({ rule: ruleB, sidx: 7, eidx: 7 })
+        );
+        subject.chart._add(
+          new ChartItem({ rule: ruleB2, sidx: 7, eidx: 8 })
+        );
+        subject.chart._add(
+          new ChartItem({ rule: ruleB, sidx: 10, eidx: 10 })
+        );
+        const openTerm = new ChartItem({ rule: ruleAT, sidx: 5, eidx: 5, dot: 0 });
+        sinon.spy(subject.chart, 'addScanned');
+        subject.approxScanner(openTerm);
+        expect(subject.chart.addScanned).to.have.been.calledWith(
+          openTerm, 7, ['67']
+        );
+        expect(subject.chart.addScanned).to.have.been.calledWith(
+          openTerm, 7, ['67']
+        );
+        expect(subject.chart.addScanned).to.have.been.calledWith(
+          openTerm, 10, ['67891']
+        );
+      });
     });
   });
 

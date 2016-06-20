@@ -600,6 +600,15 @@ class Chart {
     this.logger.debug(`parentEntities: ${parentEntities}`);
     return parentEntities;
   }
+
+  /**
+   * Returns number edges in agenda, e.g. number to edges needs to be processed
+   *
+   * @returns {number} Number of edges in agenda
+   */
+  agendaSize() {
+    return this.hypothesis.length - this.hypothesisIdx;
+  }
 }
 
 exports = module.exports = {
