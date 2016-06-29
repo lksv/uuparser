@@ -35,7 +35,7 @@ class EntityTerminal extends RegExpTerminal {
     if (!entity) {
       throw new Error(`Unregistered entity "${name}"`);
     }
-    super(name, entity.regExp);
+    super(name, entity.regExp, entity.boundary);
   }
 
   toString() {
@@ -44,13 +44,16 @@ class EntityTerminal extends RegExpTerminal {
 
   /**
    * Register entity name in global storage.
+   *
    * @param {string} name Name of entity
    * @param {array} list array of entities e.g. array of strings to match
+   * @param {string} regExpFlags Flags for regular expression, i.e. flag i could be useful
+   * @param {string|arryay} boundary Type of boundary (passed to RegExpTerminal constructor)
    * @returns {undefined}
    */
-  static registerEntity(name, list) {
-    const regExp = EntityHelper.entities2regexp(list);
-    EntityTerminal.entityStorage.set(name, { list, regExp });
+  static registerEntity(name, list, regExpFlags = '', boundary = 'alpha') {
+    const regExp = new RegExp(EntityHelper.entities2regexp(list), regExpFlags);
+    EntityTerminal.entityStorage.set(name, { list, regExp, boundary });
   }
 }
 EntityTerminal.entityStorage = new Map();

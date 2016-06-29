@@ -119,8 +119,8 @@ describe('RegExpTerminal', () => {
       expect(callback).to.have.not.been.called;
     });
 
-    it('calls calback for each occurence', () => {
-      const s = new RegExpTerminal(/[^ ]+/);
+    it('calls calback for each occurence when no bounds', () => {
+      const s = new RegExpTerminal('nonWord', /[^ ]+/, ['', '']);
       const callback = sinon.spy();
       s.matchAll('abcd123xyz  aba', callback);
       expect(callback).to.have.callCount(4);
@@ -128,6 +128,25 @@ describe('RegExpTerminal', () => {
       expect(callback).to.have.been.calledWith('123xyz', 4, 10);
       expect(callback).to.have.been.calledWith('xyz', 7, 10);
       expect(callback).to.have.been.calledWith('aba', 12, 15);
+    });
+
+    it('calls calback for each occurence when alpha bounds', () => {
+      const s = new RegExpTerminal('names', /(?:xxx|yyy)/, 'alpha');
+      const callback = sinon.spy();
+      s.matchAll('axxx xxxa aaxxxaa byyy yyyb ccyyycc 1xxx1 xxx yyy', callback);
+      expect(callback).to.have.callCount(3);
+      expect(callback).to.have.been.calledWith('xxx', 37, 40);
+      expect(callback).to.have.been.calledWith('xxx', 42, 45);
+      expect(callback).to.have.been.calledWith('yyy', 46, 49);
+    });
+
+    it('calls calback for each occurence when alnum bounds', () => {
+      const s = new RegExpTerminal('names', /(?:xxx|yyy)/, 'alnum');
+      const callback = sinon.spy();
+      s.matchAll('axxx xxxa aaxxxaa byyy yyyb ccyyycc 1xxx1 xxx yyy', callback);
+      expect(callback).to.have.callCount(2);
+      expect(callback).to.have.been.calledWith('xxx', 42, 45);
+      expect(callback).to.have.been.calledWith('yyy', 46, 49);
     });
   });
 });

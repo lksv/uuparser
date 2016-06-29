@@ -194,18 +194,43 @@ GrmSymbol.registerGrammarSymbol(
 //
 // There should be bettr ways as XRegExp, but it means to be dpendent on this
 // eslint-disable-next-line
-const UtfCased = '(?:[A-Za-zªµºÀ-ÖØ-öø-ƺƼ-ƿǄ-ʓʕ-ʯͰ-ͳͶ-ͷͻ-ͽΆΈ-ΊΌΎ-ΡΣ-ϵϷ-ҁҊ-ԣԱ-Ֆա-ևႠ-Ⴥᴀ-ᴫᵢ-ᵷᵹ-ᶚḀ-ἕἘ-Ἕἠ-ὅὈ-Ὅὐ-ὗὙὛὝὟ-ώᾀ-ᾴᾶ-ᾼιῂ-ῄῆ-ῌῐ-ΐῖ-Ίῠ-Ῥῲ-ῴῶ-ῼⁱⁿℂℇℊ-ℓℕℙ-ℝℤΩℨK-ℭℯ-ℴℹℼ-ℿⅅ-ⅉⅎↃ-ↄⰀ-Ⱞⰰ-ⱞⱠ-Ɐⱱ-ⱼⲀ-ⳤⴀ-ⴥꙀ-ꙟꙢ-ꙭꚀ-ꚗꜢ-ꝯꝱ-ꞇꞋ-ꞌﬀ-ﬆﬓ-ﬗＡ-Ｚａ-ｚ]|\ud801[\udc00-\udc4f]|\ud835[\udc00-\udc54\udc56-\udc9c\udc9e-\udc9f\udca2\udca5-\udca6\udca9-\udcac\udcae-\udcb9\udcbb\udcbd-\udcc3\udcc5-\udd05\udd07-\udd0a\udd0d-\udd14\udd16-\udd1c\udd1e-\udd39\udd3b-\udd3e\udd40-\udd44\udd46\udd4a-\udd50\udd52-\udea5\udea8-\udec0\udec2-\udeda\udedc-\udefa\udefc-\udf14\udf16-\udf34\udf36-\udf4e\udf50-\udf6e\udf70-\udf88\udf8a-\udfa8\udfaa-\udfc2\udfc4-\udfcb])';
+const UtfCasedAlpha = '(?:[A-Za-zªµºÀ-ÖØ-öø-ƺƼ-ƿǄ-ʓʕ-ʯͰ-ͳͶ-ͷͻ-ͽΆΈ-ΊΌΎ-ΡΣ-ϵϷ-ҁҊ-ԣԱ-Ֆա-ևႠ-Ⴥᴀ-ᴫᵢ-ᵷᵹ-ᶚḀ-ἕἘ-Ἕἠ-ὅὈ-Ὅὐ-ὗὙὛὝὟ-ώᾀ-ᾴᾶ-ᾼιῂ-ῄῆ-ῌῐ-ΐῖ-Ίῠ-Ῥῲ-ῴῶ-ῼⁱⁿℂℇℊ-ℓℕℙ-ℝℤΩℨK-ℭℯ-ℴℹℼ-ℿⅅ-ⅉⅎↃ-ↄⰀ-Ⱞⰰ-ⱞⱠ-Ɐⱱ-ⱼⲀ-ⳤⴀ-ⴥꙀ-ꙟꙢ-ꙭꚀ-ꚗꜢ-ꝯꝱ-ꞇꞋ-ꞌﬀ-ﬆﬓ-ﬗＡ-Ｚａ-ｚ]|\ud801[\udc00-\udc4f]|\ud835[\udc00-\udc54\udc56-\udc9c\udc9e-\udc9f\udca2\udca5-\udca6\udca9-\udcac\udcae-\udcb9\udcbb\udcbd-\udcc3\udcc5-\udd05\udd07-\udd0a\udd0d-\udd14\udd16-\udd1c\udd1e-\udd39\udd3b-\udd3e\udd40-\udd44\udd46\udd4a-\udd50\udd52-\udea5\udea8-\udec0\udec2-\udeda\udedc-\udefa\udefc-\udf14\udf16-\udf34\udf36-\udf4e\udf50-\udf6e\udf70-\udf88\udf8a-\udfa8\udfaa-\udfc2\udfc4-\udfcb])';
+// eslint-disable-next-line
+const UtfCasedAlNum = '(?:[A-Za-z0-9ªµºÀ-ÖØ-öø-ƺƼ-ƿǄ-ʓʕ-ʯͰ-ͳͶ-ͷͻ-ͽΆΈ-ΊΌΎ-ΡΣ-ϵϷ-ҁҊ-ԣԱ-Ֆա-ևႠ-Ⴥᴀ-ᴫᵢ-ᵷᵹ-ᶚḀ-ἕἘ-Ἕἠ-ὅὈ-Ὅὐ-ὗὙὛὝὟ-ώᾀ-ᾴᾶ-ᾼιῂ-ῄῆ-ῌῐ-ΐῖ-Ίῠ-Ῥῲ-ῴῶ-ῼⁱⁿℂℇℊ-ℓℕℙ-ℝℤΩℨK-ℭℯ-ℴℹℼ-ℿⅅ-ⅉⅎↃ-ↄⰀ-Ⱞⰰ-ⱞⱠ-Ɐⱱ-ⱼⲀ-ⳤⴀ-ⴥꙀ-ꙟꙢ-ꙭꚀ-ꚗꜢ-ꝯꝱ-ꞇꞋ-ꞌﬀ-ﬆﬓ-ﬗＡ-Ｚａ-ｚ]|\ud801[\udc00-\udc4f]|\ud835[\udc00-\udc54\udc56-\udc9c\udc9e-\udc9f\udca2\udca5-\udca6\udca9-\udcac\udcae-\udcb9\udcbb\udcbd-\udcc3\udcc5-\udd05\udd07-\udd0a\udd0d-\udd14\udd16-\udd1c\udd1e-\udd39\udd3b-\udd3e\udd40-\udd44\udd46\udd4a-\udd50\udd52-\udea5\udea8-\udec0\udec2-\udeda\udedc-\udefa\udefc-\udf14\udf16-\udf34\udf36-\udf4e\udf50-\udf6e\udf70-\udf88\udf8a-\udfa8\udfaa-\udfc2\udfc4-\udfcb])';
 // eslint-disable-next-line
 const UtfZs = '[ \u00a0\u1680\u180e\u2000-\u200a\u202f\u205f\u3000]';
 
 class RegExpTerminal extends Terminal {
   /**
-   * @constructor
+   *
+   * RegExpTerminal - match terminal by specified regular expression
+   *
+   * Boudary is used for buttomUp and bottomUpApprox parser type. Boundary is
+   * used to check that the terminal has selected boundary in input string.
+   * Boundary types:
+   *  * "alpha" - word boundaries are by utf8 characters (no digits)
+   *  * "alnum" - word boundaries are by alphabetic and numeric character
+   *  [behindRegexpString, forwardRegexpString] - custom specification
+   *
+   *
    * @param {String} name Name of the terminal
    * @param {String|RegExp} regExp Pattern to match
+   * @param {String|Array} boundary how to match boundary of the word ('alpha', 'alnum', or custom)
    */
-  constructor(name, regExp = name) {
+  constructor(name, regExp = name, boundary = 'alpha') {
     super(name);
+
+    if (boundary === 'alpha') {
+      this.behindRegexpString = `(?:^|(?!${UtfCasedAlpha}).)`;
+      this.forwardRegexpString = `(?:$|(?!${UtfCasedAlpha}).)`;
+    } else if (boundary === 'alnum') {
+      this.behindRegexpString = `(?:^|(?!${UtfCasedAlNum}).)`;
+      this.forwardRegexpString = `(?:$|(?!${UtfCasedAlNum}).)`;
+    } else {
+      this.behindRegexpString = boundary[0];
+      this.forwardRegexpString = boundary[1];
+    }
+
     // ensure that regexp has //y flag
     this.regExp = (regExp instanceof RegExp)
       ? new RegExp(regExp.source, regExp.flags + 'y')  // eslint-disable-line prefer-template
@@ -254,7 +279,7 @@ class RegExpTerminal extends Terminal {
    */
   matchAll(str, callback) {
     const regExpWithoutY = new RegExp(
-      this.regExp.source,
+      `(${this.behindRegexpString})(${this.regExp.source})(${this.forwardRegexpString})`,
       this.regExp.flags.replace(/y/, 'g')
     );
 
@@ -263,17 +288,30 @@ class RegExpTerminal extends Terminal {
       if (!found) {
         return;
       }
-      callback(found[0], found.index, found.index + found[0].length);
+      // console.log('bottomUp', regExpWithoutY.lastIndex,
+      //             str.slice(regExpWithoutY.lastIndex - 10, regExpWithoutY.lastIndex - 1), '<<<',
+      //             found[1]
+      //             '>>> ', str.slice(regExpWithoutY.lastIndex, regExpWithoutY.lastIndex + 10)
+      //            );
+      const foundSidx = found.index + found[1].length;
+      callback(found[2], foundSidx, foundSidx + found[2].length);
       // where to start new match? cannot start found.index + 1, i.e. \d+
       // needs to start after the "word" break but at least at regExpWithoutY.lastIndex
-      const space = new RegExp(`\\d+|${UtfCased}+|${UtfZs}+`, 'uy');
-      space.lastIndex = found.index + 1;
+      const space = new RegExp(`\\d+|${UtfCasedAlpha}+|${UtfZs}+`, 'uy');
+      // try to skip spaces
+      space.lastIndex = foundSidx + 1;
       const wordBreakFound = space.exec(str);
       const wordBreak = wordBreakFound ? space.lastIndex : Number.MAX_SAFE_INTEGER;
 
-      regExpWithoutY.lastIndex = (regExpWithoutY.lastIndex > wordBreak)
+      const newIndex = (regExpWithoutY.lastIndex > wordBreak)
         ? wordBreak
-        : regExpWithoutY.lastIndex;
+        : regExpWithoutY.lastIndex - found[2].length;
+
+      regExpWithoutY.lastIndex = (
+        (regExpWithoutY.lastIndex === newIndex) || (foundSidx === newIndex)
+      )
+        ? regExpWithoutY.lastIndex + 1
+        : newIndex;
     }
   }
 }

@@ -16,7 +16,7 @@
     "parser"
   ],
   "author": "Lukáš Svoboda",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "devDependencies": {
     "chai": "^3.5.0",
     "eslint": "^2.10.2",
