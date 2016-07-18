@@ -12,7 +12,17 @@ class EntityHelper {
     }, new Map);
   }
 
-  static _specialChars2Reg(str) {
+  /**
+   * Converts string *str* to matching regexp string.
+   * It handles special characters:
+   * * space - converts to 1 to 4 spaces
+   * * dash - should or should not by surounded by spaces
+   * * escape characters which has special meaning in RegExp
+   *
+   * @param {string} str String to convert
+   * @returns {string} Should be used to construct regular expression
+   */
+  static specialChars2Reg(str) {
     return str
       .replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&') // escape all special characters
       .replace(/\s*\\-\s*/g, '\\s{0,4}\\-\\s{0,4}')
@@ -36,7 +46,7 @@ class EntityHelper {
    * @param {strToReg} strToReg function to handle special characters (e.g. spaces, dash, etc.)
    * @returns {string} String which should be used as regular expression to match all entities
    */
-  static entities2regexp(entities, strToReg = EntityHelper._specialChars2Reg) {
+  static entities2regexp(entities, strToReg = EntityHelper.specialChars2Reg) {
     const result = [];
     const map = EntityHelper._partial(entities);
     map.forEach((values, group) => {

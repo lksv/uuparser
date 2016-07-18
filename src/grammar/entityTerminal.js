@@ -49,10 +49,14 @@ class EntityTerminal extends RegExpTerminal {
    * @param {array} list array of entities e.g. array of strings to match
    * @param {string} regExpFlags Flags for regular expression, i.e. flag i could be useful
    * @param {string|arryay} boundary Type of boundary (passed to RegExpTerminal constructor)
+   * @param {function} entitySpecialCharsFce handle special charts, see EntityHelper.entities2regexp
    * @returns {undefined}
    */
-  static registerEntity(name, list, regExpFlags = '', boundary = 'alpha') {
-    const regExp = new RegExp(EntityHelper.entities2regexp(list), regExpFlags);
+  static registerEntity(name, list, regExpFlags = '', boundary = 'alpha', entitySpecialCharsFce) {
+    const regExp = new RegExp(
+      EntityHelper.entities2regexp(list, entitySpecialCharsFce),
+      regExpFlags
+    );
     EntityTerminal.entityStorage.set(name, { list, regExp, boundary });
   }
 }

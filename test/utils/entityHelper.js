@@ -5,24 +5,24 @@ const expect = require('chai').expect;
 const EntityHelper = require('../..').EntityHelper;
 
 describe('EntityHelper', () => {
-  describe('._specialChars2Reg', () => {
+  describe('.specialChars2Reg', () => {
     it('leave string as is when do not contain special characters', () => {
-      expect(EntityHelper._specialChars2Reg('xxx')).to.equal('xxx');
+      expect(EntityHelper.specialChars2Reg('xxx')).to.equal('xxx');
     });
 
     it('escape regular expression special characters', () => {
-      expect(EntityHelper._specialChars2Reg('[](){}+.*?^$|\\')).to.equal(
+      expect(EntityHelper.specialChars2Reg('[](){}+.*?^$|\\')).to.equal(
         '\\[\\]\\(\\)\\{\\}\\+\\.\\*\\?\\^\\$\\|\\\\'
       );
     });
 
     it('converts spaces to \\s{1,4}', () => {
-      expect(EntityHelper._specialChars2Reg('  x ')).to.equal('\\s{1,4}x\\s{1,4}');
+      expect(EntityHelper.specialChars2Reg('  x ')).to.equal('\\s{1,4}x\\s{1,4}');
     });
 
     it('converts "-" to \\s{0,4}-\\s{0,4}', () => {
-      expect(EntityHelper._specialChars2Reg('aa-bb')).to.equal('aa\\s{0,4}\\-\\s{0,4}bb');
-      expect(EntityHelper._specialChars2Reg('aa - bb')).to.equal('aa\\s{0,4}\\-\\s{0,4}bb');
+      expect(EntityHelper.specialChars2Reg('aa-bb')).to.equal('aa\\s{0,4}\\-\\s{0,4}bb');
+      expect(EntityHelper.specialChars2Reg('aa - bb')).to.equal('aa\\s{0,4}\\-\\s{0,4}bb');
     });
   });
 
