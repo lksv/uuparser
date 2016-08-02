@@ -65,11 +65,32 @@ class Grammar {
     return res.filter(rule => rule.isEmpty());
   }
 
+  /**
+   * Returns all empty rules
+   *
+   * @returns {Array} Array of (empty) rules
+   */
+  epsilonRules() {
+    return this.rules.filter(rule => rule.isEmpty());
+  }
 
+
+  /**
+   * Returns all entity rules.
+   * Entity rules keeps "semantic" representation and are returned as result
+   * of parsing.
+   *
+   * @returns {Array} Array of (entity) rules
+   */
   entityRules() {
     return this.rules.filter(rule => rule.entity);
   }
 
+  /**
+   * Returns all rules which start on (any) terminal symbol
+   *
+   * @returns {Array} Array of rules which start of Terminal symbol
+   */
   terminalStartRules() {
     return this.rules.filter(
       rule => rule.rhs[0] && (rule.rhs[0] instanceof Terminal)

@@ -66,8 +66,8 @@ describe('Terminal', () => {
     });
   });
   describe('#match', () => {
-    it('should match exact match with input', () => {
-      expect(subject.match('xxx terminal here', 4)).to.eql([['terminal'], 12]);
+    it('should match exact match within input and skip following spaces by lexer', () => {
+      expect(subject.match('xxx terminal here', 4)).to.eql([['terminal'], 13]);
     });
   });
 
@@ -84,7 +84,7 @@ describe('Terminal', () => {
       s.matchAll('ababa  aba', callback);
       expect(callback).to.have.been.calledThrice;
       expect(callback).to.have.been.calledWith('aba', 0, 3);
-      expect(callback).to.have.been.calledWith('aba', 2, 5);
+      expect(callback).to.have.been.calledWith('aba', 2, 7);
       expect(callback).to.have.been.calledWith('aba', 7, 10);
     });
   });
@@ -107,8 +107,8 @@ describe('RegExpTerminal', () => {
   });
 
   describe('#match', () => {
-    it('should match exact match with input', () => {
-      expect(subject.match('xxx 123 here', 4)).to.eql([['123'], 7]);
+    it('should match exact match within input and skip following spaces by lexer', () => {
+      expect(subject.match('xxx 123 here', 4)).to.eql([['123'], 8]);
     });
   });
 
@@ -124,9 +124,9 @@ describe('RegExpTerminal', () => {
       const callback = sinon.spy();
       s.matchAll('abcd123xyz  aba', callback);
       expect(callback).to.have.callCount(4);
-      expect(callback).to.have.been.calledWith('abcd123xyz', 0, 10);
-      expect(callback).to.have.been.calledWith('123xyz', 4, 10);
-      expect(callback).to.have.been.calledWith('xyz', 7, 10);
+      expect(callback).to.have.been.calledWith('abcd123xyz', 0, 12);
+      expect(callback).to.have.been.calledWith('123xyz', 4, 12);
+      expect(callback).to.have.been.calledWith('xyz', 7, 12);
       expect(callback).to.have.been.calledWith('aba', 12, 15);
     });
 
@@ -136,7 +136,7 @@ describe('RegExpTerminal', () => {
       s.matchAll('axxx xxxa aaxxxaa byyy yyyb ccyyycc 1xxx1 xxx yyy', callback);
       expect(callback).to.have.callCount(3);
       expect(callback).to.have.been.calledWith('xxx', 37, 40);
-      expect(callback).to.have.been.calledWith('xxx', 42, 45);
+      expect(callback).to.have.been.calledWith('xxx', 42, 46);
       expect(callback).to.have.been.calledWith('yyy', 46, 49);
     });
 
@@ -145,7 +145,7 @@ describe('RegExpTerminal', () => {
       const callback = sinon.spy();
       s.matchAll('axxx xxxa aaxxxaa byyy yyyb ccyyycc 1xxx1 xxx yyy', callback);
       expect(callback).to.have.callCount(2);
-      expect(callback).to.have.been.calledWith('xxx', 42, 45);
+      expect(callback).to.have.been.calledWith('xxx', 42, 46);
       expect(callback).to.have.been.calledWith('yyy', 46, 49);
     });
   });

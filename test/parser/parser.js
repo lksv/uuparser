@@ -245,7 +245,7 @@ describe('Parser', () => {
       subject.initBottomUp();
       expect(subject.chart.addInitialProcessed).to.have.been.calledTwice;
       expect(subject.chart.addInitialProcessed).to.have.been.calledWith(
-        0, ruleA2regExpTerm, 3, 'two'
+        0, ruleA2regExpTerm, 4, 'two'
       );
       expect(subject.chart.addInitialProcessed).to.have.been.calledWith(
         4, ruleA2regExpTerm, 9, 'words'

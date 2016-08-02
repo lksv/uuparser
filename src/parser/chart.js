@@ -64,10 +64,10 @@ class ChartItemHistory {
 class ChartItem {
   constructor(cloneFrom, cloneFrom2 = {}) {
     this.history = [];
-    this.sidx = cloneFrom2.sidx || cloneFrom.sidx;
-    this.eidx = cloneFrom2.eidx || cloneFrom.eidx;
+    this.sidx = Number.isInteger(cloneFrom2.sidx) ? cloneFrom2.sidx : cloneFrom.sidx;
+    this.eidx = Number.isInteger(cloneFrom2.eidx) ? cloneFrom2.eidx : cloneFrom.eidx;
     this.rule = cloneFrom2.rule || cloneFrom.rule;
-    this.dot  = cloneFrom2.dot  || cloneFrom.dot || 0; // eslint-disable-line
+    this.dot  = Number.isInteger(cloneFrom2.dot) ? cloneFrom2.dot : (cloneFrom.dot || 0); // eslint-disable-line
     this._marked = false;
 
     const open = cloneFrom2.open || cloneFrom.open;
@@ -141,7 +141,32 @@ class ChartItem {
         return !p || p === currentPriority;
       }
     );
-    return priorityFilterdHistory;
+
+    // filter out history with any position matching if there is
+    // also same history with particular location
+    const anyPositionFilteredHistory = priorityFilterdHistory.filter(
+      item => {
+        if (item.open && (item.open.sidx === undefined)) {
+          return !priorityFilterdHistory.find(
+            h => (
+              (h.open && (h.open.sidx !== undefined)) &&
+              (h.open.rule === item.open.rule) &&
+              (h.closed.code === item.closed.code)
+            )
+          );
+        } else if (item.closed && (item.closed.sidx === undefined)) {
+          return !priorityFilterdHistory.find(
+            h => (
+              (h.closed && (h.closed.sidx !== undefined)) &&
+              (h.closed.rule === item.closed.rule) &&
+              (h.open.code === item.open.code)
+            )
+          );
+        }
+        return true;
+      }
+    );
+    return anyPositionFilteredHistory;
   }
 
   /**
@@ -240,6 +265,13 @@ class ChartItem {
     other.history.forEach(otherHistory => {
       const otherHistoryHashCode = otherHistory.code;
       if (!this.history.find(h => (h.code === otherHistoryHashCode))) {
+        // console.log(
+        //   'otherHistory',
+        //   otherHistory.open.toString(), otherHistory.closed.toString()
+        // );
+        // this.history.forEach(h =>
+        //   console.log(' myHistory', h.open.toString(), h.closed.toString())
+        // );
         this.history.push(otherHistory);
       }
     });
@@ -465,7 +497,12 @@ class Chart {
     }
     /* eslint-enable no-cond-assign */
 
+    // special case of rules starting on empty Nonterminals:
+    // In this case open.sidx is undefined and is needed to assign
+    // it as closed.sidx
+    const sidx = (open.sidx !== undefined) ? open.sidx : closed.sidx;
     const newEdge = new ChartItem(open, {
+      sidx,
       eidx: closed.eidx,
       dot: open.dot + 1,
       open,
@@ -499,14 +536,16 @@ class Chart {
    * @param {Number} eidx Index in input we are consumed to
    * @param {Object} termMatch result of *match* symbol.method
    *                            (usually the string we consumed from input)
+   * @param {Number} sidx Index in input where the scanned terminal was matched from
    * @returns {undefined}
    */
-  addScanned(chartItem, eidx, termMatch) {
+  addScanned(chartItem, eidx, termMatch, sidx) {
     const newEdge = new ChartItem(chartItem, {
       dot: chartItem.dot + 1,
       eidx,
       open: chartItem,
       termMatch,
+      sidx: Number.isInteger(sidx) ? sidx : chartItem.sidx,
     });
     this.logger.debug(`  addScanner: ${newEdge}`);
     this._add(newEdge);
@@ -526,6 +565,7 @@ class Chart {
       eidx: idx,
       rule,
     });
+    this.logger.debug(`  adding to agenda ${open.toString()}`);
     this._add(open);
   }
 
@@ -539,25 +579,26 @@ class Chart {
    * @param {String|NodeResult} termMatch termMatch for the second rule
    * @returns {undefined}
    */
-  // addInitialProcessed(idx, rule, eidx, termMatch) {
-  addInitialProcessed(idx, rule) {
+  addInitialProcessed(idx, rule, eidx, termMatch) {
     const open = new ChartItem({
       dot: 0,
       sidx: idx,
       eidx: idx,
       rule,
     });
-    this._add(open); // , this.initChartHypothesis);
+    this.logger.debug(`  adding to agenda ${open.toString()}`);
+    this._add(open, this.initChartHypothesis);
 
-    // console.log(termMatch, idx, eidx, rule);
-    // this._add(new ChartItem({
-    //   dot: 1,
-    //   sidx: idx,
-    //   eidx,
-    //   rule,
-    //   open,
-    //   termMatch,
-    // }));
+    const matchedEdge = new ChartItem({
+      dot: 1,
+      sidx: idx,
+      eidx,
+      rule,
+      open,
+      termMatch: [termMatch],
+    });
+    this.logger.debug(`  adding to chart ${matchedEdge.toString()}`);
+    this._add(matchedEdge);
   }
 
   getReduced(symbol, idx) {

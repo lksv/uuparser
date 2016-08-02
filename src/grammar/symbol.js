@@ -72,10 +72,13 @@ class Terminal extends GrmSymbol {
    * @constructor
    * @param {String} name name of the terminal
    * @param {String} pattern pattern which it match in input
+   * @param {String} [lexer=Terminal.defaultLexer] lexer to use
+   *                 (used to skip "blank" chars after terminal match)
    */
-  constructor(name) {
+  constructor(name, pattern = name, lexer = Terminal.defaultLexer) {
     super(name);
-    this.pattern = name;
+    this.pattern = pattern;
+    this.lexer = lexer;
   }
 
   /**
@@ -92,7 +95,7 @@ class Terminal extends GrmSymbol {
   match(str, sidx) {
     const eidx = sidx + this.pattern.length;
     return (str.indexOf(this.pattern, sidx) === sidx) ?
-        [[this.pattern], eidx] : [undefined, undefined];
+        [[this.pattern], this.lexer(str, eidx)] : [undefined, undefined];
   }
 
   /**
@@ -106,7 +109,10 @@ class Terminal extends GrmSymbol {
   matchAll(str, callback) {
     let sidx = str.indexOf(this.pattern);
     for (; sidx !== -1; sidx = str.indexOf(this.pattern, sidx)) {
-      callback(this.pattern, sidx, sidx + this.pattern.length);
+      // calculate eidx, e.g. when term finish + skip all the "blank" chars afterward
+      const eidx = this.lexer(str, sidx + this.pattern.length);
+
+      callback(this.pattern, sidx, eidx);
       sidx += 1;
     }
   }
@@ -114,8 +120,25 @@ class Terminal extends GrmSymbol {
   toString() {
     return `"${this.name}"`;
   }
+
+  /**
+   * Skips "blank" charts from given position in input string and reutrns
+   * that position
+   *
+   * @param {string} inputString Input string
+   * @param {nubmer} idx Position in inputString
+   * @returns {nubmer} Position in inputString skipping "blank" chars
+   */
+  static defaultLexer(inputString, idx) {
+    const r = new RegExp('\\s+', 'ym');
+    r.lastIndex = idx;
+    return (r.exec(inputString)) ? r.lastIndex : idx;
+  }
 }
-GrmSymbol.registerGrammarSymbol(/^"(.*)"$/, (match) => new Terminal(match[1]));
+GrmSymbol.registerGrammarSymbol(
+  /^"(.*)"(?::([A-Za-z_][A-Za-z0-9_]+))?$/,
+  (match) => new Terminal(match[1], match[1], match[2])
+);
 
 class ApproxTerminal extends Terminal {
   constructor(name) {
@@ -216,9 +239,11 @@ class RegExpTerminal extends Terminal {
    * @param {String} name Name of the terminal
    * @param {String|RegExp} regExp Pattern to match
    * @param {String|Array} boundary how to match boundary of the word ('alpha', 'alnum', or custom)
+   * @param {String} [lexer=Terminal.defaultLexer] lexer to use
+   *                 (used to skip "blank" chars after terminal match)
    */
-  constructor(name, regExp = name, boundary = 'alpha') {
-    super(name);
+  constructor(name, regExp = name, boundary = 'alpha', lexer = Terminal.defaultLexer) {
+    super(name, lexer);
 
     if (boundary === 'alpha') {
       this.behindRegexpString = `(?:^|(?!${UtfCasedAlpha}).)`;
@@ -263,7 +288,7 @@ class RegExpTerminal extends Terminal {
     }
     return [
       [res[0]],
-      sidx + res[0].length,
+      this.lexer(str, sidx + res[0].length),
     ];
   }
 
@@ -294,7 +319,8 @@ class RegExpTerminal extends Terminal {
       //             '>>> ', str.slice(regExpWithoutY.lastIndex, regExpWithoutY.lastIndex + 10)
       //            );
       const foundSidx = found.index + found[1].length;
-      callback(found[2], foundSidx, foundSidx + found[2].length);
+      const foundEidx = this.lexer(str, foundSidx + found[2].length);
+      callback(found[2], foundSidx, foundEidx);
       // where to start new match? cannot start found.index + 1, i.e. \d+
       // needs to start after the "word" break but at least at regExpWithoutY.lastIndex
       const space = new RegExp(`\\d+|${UtfCasedAlpha}+|${UtfZs}+`, 'uy');
@@ -315,7 +341,10 @@ class RegExpTerminal extends Terminal {
     }
   }
 }
-GrmSymbol.registerGrammarSymbol(/^\/(.*)\/$/, (match) => new RegExpTerminal(match[1]));
+GrmSymbol.registerGrammarSymbol(
+  /^\/(.*)\/(?::([A-Za-z][A-Za-z0-9-]*))?$/,
+  (match) => new RegExpTerminal(match[1], match[1], 'alpha', match[2])
+);
 
 // export {NonTerminal, Terminal, RegExpTerminal}
 exports = module.exports = {

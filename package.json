@@ -4,8 +4,8 @@
   "description": "Universal Parser",
   "main": "index.js",
   "scripts": {
-    "test-unit": "mocha --require test/support/env --reporter spec --bail --check-leaks test/grammar/ test/parser/ test/utils/",
-    "test-integration": "mocha --require test/support/env --reporter spec --bail --check-leaks test/integration/",
+    "test-unit": "mocha --require test/support/env --reporter spec --check-leaks test/grammar/ test/parser/ test/utils/",
+    "test-integration": "mocha --require test/support/env --reporter spec --check-leaks test/integration/",
     "lint": "eslint src test",
     "test": "npm run lint && npm run test-unit && npm run test-integration"
   },

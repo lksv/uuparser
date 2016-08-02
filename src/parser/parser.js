@@ -60,12 +60,27 @@ class Parser {
     for (const open of waitingIter) {
       this.chart.addFromOpenClosed(open, reducedChartItem);
     }
+
+    // special case to expand rules which can man any position
+    // e.g. empty rules can match any position
+    //
+    // TODO: if reducedChartItem.sidx === undefined,
+    // then needs to propagate any position
+    const waitingIterAny = this.chart.getWaiting(
+      reducedChartItem.lhs,
+      undefined
+    );
+    for (const open of waitingIterAny) {
+      this.chart.addFromOpenClosed(open, reducedChartItem);
+    }
   }
 
   /**
    * For given *open* edge as A -> α•Bβ <openSidx, openEidx>
    *
-   * For topDown parser:
+   * For topDown and bottomUpApprox parser:
+   *   For each B -> γ rule
+   *   put new edge B -> .γ <openE, openEidx>
    *
    * Anytime:
    *   For each edge as B → γ• <closedSidx, closedEidx>
@@ -98,6 +113,16 @@ class Parser {
     for (const closed of reducedIter) {
       this.chart.addFromOpenClosed(open, closed);
     }
+
+    // special case to expand rules which can man any position
+    // e.g. empty rules can match any position
+    const reducedIterAny = this.chart.getReduced(
+      open.nextSymbol(),
+      undefined
+    );
+    for (const closed of reducedIterAny) {
+      this.chart.addFromOpenClosed(open, closed);
+    }
   }
 
   /**
@@ -109,10 +134,19 @@ class Parser {
    */
   scanner(chartItem) {
     const symbol = chartItem.nextSymbol();
-    // const [res, eidx] = symbol.match(this.input, chartItem.eidx);
-    const [res, eidx] = this.lexer(symbol, this.input, chartItem.eidx);
-    if (res) {
-      this.chart.addScanned(chartItem, eidx, res);
+    if (chartItem.sidx === undefined) {
+      // it is not necessary to matchAll for a first symbol in rule.
+      // It is already processed
+      this.logger.info(`calling matchAll for rule: ${chartItem.rule}`);
+      symbol.matchAll(
+        this.input,
+        (match, sidx, eidx) => this.chart.addScanned(chartItem, eidx, [match], sidx)
+      );
+    } else {
+      const [res, eidx] = symbol.match(this.input, chartItem.eidx);
+      if (res) {
+        this.chart.addScanned(chartItem, eidx, res);
+      }
     }
   }
 
@@ -294,41 +328,21 @@ class Parser {
   }
 
   initBottomUp() {
-    // TODO: for speedup, add only rules which are derivated from entiti rules
+    // Initialize all empty rules with sidx (and eidx) to undefined.
+    // It represents any possible possition
+    this.grammar.epsilonRules().forEach(
+      rule => this.chart.addInitial(undefined, rule)
+    );
+    // but it is also necessary to put neterm starting
     this.grammar.terminalStartRules().forEach(
       rule => {
-        rule.rhs[0].matchAll(
+        const matchSymbol = rule.rhs[0];
+        matchSymbol.matchAll(
           this.input,
-          // TODO: needs to employ this.lexer for calculating eidx
           (match, sidx, eidx) => this.chart.addInitialProcessed(sidx, rule, eidx, match)
         );
       }
     );
-  }
-
-  /**
-   * Try to match given *symbol* in *inputString* from *sidx* position.
-   * Returns array of two items:
-   * * matched string
-   * * position in *inputString* upto the symbol was matched to
-   *
-   * @param {Symbol} symbol Nonterminal to match
-   * @param {String} inputString Input string
-   * @param {Number} sidx Position to match from
-   * @returns {Array} Matched string and eidx position
-   */
-  static defaultLexer(symbol, inputString, sidx) {
-    const [res, eidx] = symbol.match(inputString, sidx);
-    if (!res) {
-      return [undefined, undefined];
-    }
-    // static constant, how to set it that in JS?
-    const r = new RegExp('\\s+', 'ym');
-    r.lastIndex = eidx;
-    if (r.exec(inputString)) {
-      return [res, r.lastIndex];
-    }
-    return [res, eidx];
   }
 }
 

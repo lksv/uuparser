@@ -41,6 +41,6 @@ const test = (inputString, result, parserType) => {
 
 describe('Parse input grammar', () => {
   context('TopDown', () => {
-    test('parc. id. 10 xxx 20', '10-xxx -20', 'bottomUpApprox');
+    test('parc. id. 10   xxx 20', '10-xxx -20', 'bottomUpApprox');
   });
 });
