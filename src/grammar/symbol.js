@@ -246,11 +246,11 @@ class RegExpTerminal extends Terminal {
     super(name, lexer);
 
     if (boundary === 'alpha') {
-      this.behindRegexpString = `(?:^|(?!${UtfCasedAlpha}).)`;
-      this.forwardRegexpString = `(?:$|(?!${UtfCasedAlpha}).)`;
+      this.behindRegexpString = `(?:^|(?!${UtfCasedAlpha})[\\w\\W])`;
+      this.forwardRegexpString = `(?:$|(?!${UtfCasedAlpha})[\\w\\W])`;
     } else if (boundary === 'alnum') {
-      this.behindRegexpString = `(?:^|(?!${UtfCasedAlNum}).)`;
-      this.forwardRegexpString = `(?:$|(?!${UtfCasedAlNum}).)`;
+      this.behindRegexpString = `(?:^|(?!${UtfCasedAlNum})[\\w\\W])`;
+      this.forwardRegexpString = `(?:$|(?!${UtfCasedAlNum})[\\w\\W])`;
     } else {
       this.behindRegexpString = boundary[0];
       this.forwardRegexpString = boundary[1];
@@ -314,9 +314,9 @@ class RegExpTerminal extends Terminal {
         return;
       }
       // console.log('bottomUp', regExpWithoutY.lastIndex,
-      //             str.slice(regExpWithoutY.lastIndex - 10, regExpWithoutY.lastIndex - 1), '<<<',
-      //             found[1]
-      //             '>>> ', str.slice(regExpWithoutY.lastIndex, regExpWithoutY.lastIndex + 10)
+      //             '>>>', found[1], '<<<>>>',
+      //             found[2],
+      //             '<<<>>> ', found[3], '<<<'
       //            );
       const foundSidx = found.index + found[1].length;
       const foundEidx = this.lexer(str, foundSidx + found[2].length);
